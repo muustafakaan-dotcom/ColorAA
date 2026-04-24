@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ColorAA — Renk Eşleştirme Oyunu</title>
+    <meta name="description" content="Dönen dairedeki renk şeritlerine doğru renkteki topları fırlat ve daireyi temizle!">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- HUD -->
+        <div id="hud" class="hud-hidden">
+            <button id="btn-hud-home" class="hud-home">ANA MENÜ</button>
+            <div class="hud-item">
+                <span class="hud-label">BÖLÜM</span>
+                <span class="hud-value" id="hud-level">1</span>
+            </div>
+        </div>
+
+        <!-- ====== HOME SCREEN ====== -->
+        <div id="screen-home" class="screen">
+            <div class="screen-content">
+                <div class="home-top">
+                    <h1 id="game-title">Color<span>AA</span></h1>
+                    <p class="subtitle">Renkleri eşleştir, daireyi temizle</p>
+                </div>
+                <div class="home-actions">
+                    <button id="btn-play" class="btn-play">OYNA</button>
+                    <button id="btn-levels" class="btn-ghost">BÖLÜMLER</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====== LEVEL SELECT ====== -->
+        <div id="screen-levels" class="screen hidden">
+            <div class="levels-wrapper">
+                <div class="levels-header">
+                    <button id="btn-back-home" class="btn-icon" aria-label="Geri">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <h2 class="levels-heading">Bölümler</h2>
+                    <div style="width:40px"></div>
+                </div>
+                <div id="levels-scroll">
+                    <div id="levels-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====== LEVEL COMPLETE ====== -->
+        <div id="screen-levelup" class="screen hidden">
+            <div class="screen-content">
+                <h2 class="screen-heading">BÖLÜM <span id="completed-level">1</span> TAMAM!</h2>
+                <p class="bonus-text">+<span id="level-bonus">100</span> bonus</p>
+                <div class="screen-actions">
+                    <button id="btn-nextlevel" class="btn-play">SONRAKİ BÖLÜM →</button>
+                    <button id="btn-go-home-2" class="btn-ghost">ANA MENÜ</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Combo popup -->
+        <div id="combo-popup" class="hidden">
+            <span id="combo-text"></span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
