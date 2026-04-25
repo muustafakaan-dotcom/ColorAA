@@ -7,7 +7,7 @@ const ctx = canvas.getContext('2d');
 
 // ── Colors ──
 const COLORS = ['#FF6B6B','#4ECDC4','#FFE66D','#7C5CFC','#F5E6CC','#6BCB77'];
-const TOTAL_LEVELS = 50;
+const TOTAL_LEVELS = 80;
 
 // ── Layout Config ──
 let cfg = { ringRadius:120, ringWidth:28, ballRadius:13, ballSpeed:10, shooterY:600, centerX:0, centerY:0 };
@@ -16,7 +16,7 @@ let cfg = { ringRadius:120, ringWidth:28, ballRadius:13, ballSpeed:10, shooterY:
 let G = {
     state:'home',
     level:1, score:0, maxCombo:0, combo:0,
-    rotation:0, rotationSpeed:0.012,
+    rotation:0, rotationSpeed:0.012, cx:0, cy:0,
     segments:[], ball:null, ballQueue:[],
     isShooting:false, particles:[],
     ringPulse:0, shakeTimer:0, shakeIntensity:0,
@@ -191,9 +191,9 @@ function getLevelConfig(lvl) {
         const speed  = 0.006 + (lvl - 1) * 0.001; // very slow ramp
         return { numColors: colors, numSegments: segs, speed };
     } else {
-        // Normal levels 11-50
+        // Normal levels 11-80
         let t = (lvl - 1) % 10 + 1; // 1..10 ramp for each 10-level block
-        const overall_t = lvl > 20 ? 10 : (lvl - 10); // cap colors and segments at level 20's difficulty for 21-50
+        const overall_t = lvl > 20 ? 10 : (lvl - 10); // cap colors and segments at level 20's difficulty for 21-80
         const colors = Math.min(3 + Math.floor(overall_t / 3), COLORS.length); // 3→6
         const segs   = 14 + overall_t * 2;               // capped at 24
         const speed  = Math.min(0.012 + (t - 1) * 0.003, 0.023);  // cap at 0.023
@@ -225,7 +225,18 @@ function generateLevel(lvl) {
     seededShuffle(cl, rng);
 
     for (let i = 0; i < nS; i++) {
-        G.segments.push({ start: i * sa, end: (i + 1) * sa, color: cl[i], alive: true });
+        G.segments.push({ start: i * sa, end: (i + 1) * sa, color: cl[i], originalColor: cl[i], alive: true, isTrap: false });
+    }
+
+    if (lvl > 50 && lvl <= 60) {
+        const numTraps = 2;
+        let trapIndices = [];
+        for(let i=0; i<nS; i++) trapIndices.push(i);
+        seededShuffle(trapIndices, rng);
+        for(let i=0; i<numTraps; i++) {
+            G.segments[trapIndices[i]].isTrap = true;
+            G.segments[trapIndices[i]].color = '#1a1a24';
+        }
     }
 
     G.ballQueue = [];
@@ -239,7 +250,7 @@ function generateLevel(lvl) {
 // ============================================================
 
 function pickColor() {
-    const a = [...new Set(G.segments.filter(s=>s.alive).map(s=>s.color))];
+    const a = [...new Set(G.segments.filter(s=>s.alive && !s.isTrap).map(s=>s.color))];
     return a.length>0 ? a[Math.floor(Math.random()*a.length)] : COLORS[0];
 }
 
@@ -248,6 +259,7 @@ function spawnBall() {
     G.ballQueue.push(pickColor());
     G.ball = { x:cfg.centerX, y:cfg.shooterY, color:c, vy:0, trail:[] };
     G.isShooting = false;
+    G.colorLastChange = Date.now(); // Reset timer for the new ball
 }
 
 function shoot() {
@@ -262,7 +274,10 @@ function shoot() {
 // ============================================================
 
 function checkHit(isTop) {
-    let la = (isTop ? -Math.PI/2 : Math.PI/2) - G.rotation;
+    const dy = G.ball.y - G.cy;
+    const dx = G.ball.x - G.cx;
+    let hitAngle = Math.atan2(dy, dx);
+    let la = hitAngle - G.rotation;
     la = ((la%(Math.PI*2)) + Math.PI*2) % (Math.PI*2);
 
     let hit = null;
@@ -274,21 +289,32 @@ function checkHit(isTop) {
         else     { if (la>=s || la<e) { hit=seg; break; } }
     }
 
-    // If ball lands on a cleared gap, let it pass through
     if (!hit) {
         if (isTop) G.ball.passedTop = true;
         else G.ball.passedBottom = true;
         return;
     }
 
-    // Stop ball at the ring edge since it hit a segment
     G.ball.vy = 0;
-    if (isTop) {
-        G.ball.y = cfg.centerY - (cfg.ringRadius - cfg.ringWidth / 2);
-    } else {
-        G.ball.y = cfg.centerY + cfg.ringRadius + cfg.ringWidth / 2;
+    const R = isTop ? (cfg.ringRadius - cfg.ringWidth / 2) : (cfg.ringRadius + cfg.ringWidth / 2);
+    if (R*R >= dx*dx) {
+        const hdy = Math.sqrt(R*R - dx*dx);
+        G.ball.y = G.cy + (isTop ? -hdy : hdy);
     }
     G.isShooting = false;
+
+    if (hit.isTrap) {
+        G.combo = 0;
+        G.shakeTimer = 20;
+        G.shakeIntensity = 12;
+        G.loseFlash = 1.0;
+        emitParticles(G.ball.x, G.ball.y, '#FF3B3B', 20);
+        G.state = 'dead';
+        setTimeout(() => {
+            if (G.state === 'dead') startLevel(G.level);
+        }, 800);
+        return;
+    }
 
     if (hit.color === G.ball.color) {
         // ✅ Correct
@@ -298,7 +324,7 @@ function checkHit(isTop) {
         G.ringPulse = 1;
 
         // Update queue colors to only contain alive colors
-        const aliveColors = [...new Set(G.segments.filter(s=>s.alive).map(s=>s.color))];
+        const aliveColors = [...new Set(G.segments.filter(s=>s.alive && !s.isTrap).map(s=>s.color))];
         if (aliveColors.length > 0) {
             for (let i=0; i<G.ballQueue.length; i++) {
                 if (!aliveColors.includes(G.ballQueue[i])) {
@@ -313,10 +339,10 @@ function checkHit(isTop) {
         }
 
         const ma = (hit.start+hit.end)/2 + G.rotation;
-        emitParticles(cfg.centerX+Math.cos(ma)*cfg.ringRadius, cfg.centerY+Math.sin(ma)*cfg.ringRadius, hit.color, 18);
+        emitParticles(G.cx+Math.cos(ma)*cfg.ringRadius, G.cy+Math.sin(ma)*cfg.ringRadius, hit.color, 18);
         if (G.combo>=2) showCombo(G.combo);
 
-        if (G.segments.every(s=>!s.alive)) {
+        if (G.segments.filter(s=>!s.isTrap).every(s=>!s.alive)) {
             G.state = 'levelup';
             
             let stars = 1;
@@ -381,39 +407,124 @@ function showCombo(n) {
 function refreshHUD() { $level.textContent=G.level; }
 
 // ============================================================
+// DYNAMIC TRAPS
+// ============================================================
+
+function shiftTraps() {
+    let traps = [];
+    for (let i=0; i<G.segments.length; i++) {
+        if (G.segments[i].isTrap) traps.push(i);
+    }
+    
+    for (let i of traps) {
+        G.segments[i].isTrap = false;
+        G.segments[i].color = G.segments[i].originalColor;
+    }
+    
+    let dir = G.rotationSpeed > 0 ? 1 : -1;
+    let nS = G.segments.length;
+    let newTraps = [];
+    
+    for (let i of traps) {
+        let nextIdx = i;
+        for (let offset = 1; offset <= nS; offset++) {
+            let idx = (i + dir * offset + nS * nS) % nS;
+            if (G.segments[idx].alive && !newTraps.includes(idx)) {
+                nextIdx = idx;
+                break;
+            }
+        }
+        newTraps.push(nextIdx);
+    }
+    
+    for (let idx of newTraps) {
+        G.segments[idx].isTrap = true;
+        G.segments[idx].color = '#1a1a24';
+    }
+}
+
+// ============================================================
 // UPDATE
 // ============================================================
 
 function update() {
     if (G.state!=='playing' && G.state!=='dead') return;
+    
+    G.cx = cfg.centerX;
+    G.cy = cfg.centerY;
+
     if (G.state === 'playing') {
         let speedMult = 1;
         if (G.level > 40 && G.level <= 50) {
             // Sine wave speed multiplier: goes from 0.15 to 1.85 smoothly
             speedMult = 1 + 0.85 * Math.sin(Date.now() * 0.0025);
         }
-        G.rotation += G.rotationSpeed * speedMult;
+        
+        if (G.level > 70 && G.level <= 80) {
+            G.continuousRotation = (G.continuousRotation || G.rotation) + G.rotationSpeed;
+            G.rotation = Math.round(G.continuousRotation / (Math.PI/12)) * (Math.PI/12);
+        } else {
+            G.rotation += G.rotationSpeed * speedMult;
+        }
     }
     if (G.ringPulse>0) G.ringPulse*=0.9;
     if (G.shakeTimer>0) { G.shakeTimer--; G.shakeIntensity*=0.85; }
     if (G.loseFlash>0) G.loseFlash -= 0.025;
+    
+    // Dynamic Traps for 51-60
+    if (G.state === 'playing' && G.level > 50 && G.level <= 60) {
+        if (!G.trapShiftLastChange) G.trapShiftLastChange = Date.now();
+        if (Date.now() - G.trapShiftLastChange > 1500) {
+            G.trapShiftLastChange = Date.now();
+            shiftTraps();
+        }
+    }
+
+    // Color Roulette for 61-70
+    if (G.state === 'playing' && G.level > 60 && G.level <= 70 && G.ball && !G.isShooting) {
+        if (!G.colorLastChange) G.colorLastChange = Date.now();
+        if (Date.now() - G.colorLastChange > 5000) {
+            G.colorLastChange = Date.now();
+            const aliveColors = [...new Set(G.segments.filter(s=>s.alive && !s.isTrap).map(s=>s.color))];
+            if (aliveColors.length > 1) {
+                let idx = aliveColors.indexOf(G.ball.color);
+                if (idx === -1) idx = 0;
+                G.ball.color = aliveColors[(idx + 1) % aliveColors.length];
+            }
+        }
+    }
 
     if (G.ball && G.isShooting) {
         let oldY = G.ball.y;
         G.ball.y += G.ball.vy;
         G.ball.trail.push({x:G.ball.x, y:G.ball.y, a:1});
         if (G.ball.trail.length>12) G.ball.trail.shift();
-        
-        let bottomEdge = cfg.centerY + cfg.ringRadius + cfg.ringWidth/2;
-        let topEdge = cfg.centerY - (cfg.ringRadius - cfg.ringWidth/2);
-        
-        if (!G.ball.passedBottom && oldY > bottomEdge && G.ball.y <= bottomEdge) {
+
+        const rOuter = cfg.ringRadius + cfg.ringWidth/2;
+        const rInner = cfg.ringRadius - cfg.ringWidth/2;
+        const d = Math.hypot(G.ball.x - G.cx, G.ball.y - G.cy);
+        const oldD = Math.hypot(G.ball.x - G.cx, oldY - G.cy);
+
+        if (!G.ball.passedBottom && oldD > rOuter && d <= rOuter) {
             checkHit(false);
-        } else if (G.ball.passedBottom && !G.ball.passedTop && oldY > topEdge && G.ball.y <= topEdge) {
+        } else if (G.ball.passedBottom && !G.ball.passedTop && oldD < rInner && d >= rInner && G.ball.y < G.cy) {
             checkHit(true);
         }
         
-        if (G.ball && G.ball.y<-50) spawnBall();
+        if (G.ball && G.ball.y<-50) {
+            if (!G.ball.passedBottom || !G.ball.passedTop) {
+                // Completely missed the ring or flew through an empty ring without hitting the top
+                G.ball.vy = 0;
+                G.combo = 0;
+                G.shakeTimer = 20;
+                G.shakeIntensity = 12;
+                G.loseFlash = 1.0;
+                G.state = 'dead';
+                setTimeout(() => { if (G.state === 'dead') startLevel(G.level); }, 800);
+            } else {
+                spawnBall();
+            }
+        }
     }
 
     if (G.ball) {
@@ -470,7 +581,7 @@ function draw() {
 }
 
 function drawRing() {
-    const cx=cfg.centerX, cy=cfg.centerY, r=cfg.ringRadius, rw=cfg.ringWidth;
+    const cx=G.cx || cfg.centerX, cy=G.cy || cfg.centerY, r=cfg.ringRadius, rw=cfg.ringWidth;
 
     let blinkAlpha = 1;
     if (G.level > 30 && G.level <= 40 && G.state === 'playing') {
@@ -498,6 +609,22 @@ function drawRing() {
         ctx.fillStyle=seg.color; 
         ctx.globalAlpha = blinkAlpha;
         ctx.fill();
+
+        if (seg.isTrap) {
+            ctx.save();
+            ctx.strokeStyle = '#FF3B3B';
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = blinkAlpha * 0.8;
+            const midAngle = (sa + ea)/2;
+            const trapX = cx + Math.cos(midAngle) * r;
+            const trapY = cy + Math.sin(midAngle) * r;
+            ctx.beginPath();
+            ctx.moveTo(trapX - 5, trapY - 5); ctx.lineTo(trapX + 5, trapY + 5);
+            ctx.moveTo(trapX + 5, trapY - 5); ctx.lineTo(trapX - 5, trapY + 5);
+            ctx.stroke();
+            ctx.restore();
+        }
+
         ctx.save(); ctx.globalAlpha = 0.15 * blinkAlpha; ctx.shadowColor=seg.color; ctx.shadowBlur=12;
         ctx.beginPath(); ctx.arc(cx,cy,r+rw/2,sa,ea); ctx.arc(cx,cy,r-rw/2,ea,sa,true);
         ctx.closePath(); ctx.fill(); ctx.restore();
@@ -506,7 +633,7 @@ function drawRing() {
     ctx.beginPath(); ctx.arc(cx,cy,r-rw/2-2,0,Math.PI*2);
     ctx.fillStyle='rgba(16,18,26,0.5)'; ctx.globalAlpha = blinkAlpha; ctx.fill();
 
-    const rem = G.segments.filter(s=>s.alive).length;
+    const rem = G.segments.filter(s=>s.alive && !s.isTrap).length;
     ctx.fillStyle='rgba(255,255,255,0.08)';
     ctx.globalAlpha = blinkAlpha;
     ctx.font=`${r*0.5}px Inter`; ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -529,9 +656,24 @@ function drawBall() {
     if (!G.isShooting) {
         ctx.save(); ctx.setLineDash([4,8]);
         ctx.beginPath(); ctx.moveTo(b.x,b.y-br-4);
-        ctx.lineTo(cfg.centerX,cfg.centerY+cfg.ringRadius+cfg.ringWidth);
+        ctx.lineTo(cfg.centerX, cfg.centerY + cfg.ringRadius + cfg.ringWidth);
         ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1.5; ctx.stroke();
         ctx.restore();
+
+        // 61-70 Countdown timer
+        if (G.level > 60 && G.level <= 70 && G.state === 'playing') {
+            const remaining = 5000 - (Date.now() - (G.colorLastChange || Date.now()));
+            const secs = Math.max(1, Math.ceil(remaining / 1000));
+            ctx.save();
+            ctx.fillStyle = b.color;
+            ctx.font = `800 ${br * 1.5}px Inter`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.shadowColor = b.color;
+            ctx.shadowBlur = 10;
+            ctx.fillText(secs, b.x, b.y - br * 1.8);
+            ctx.restore();
+        }
     }
 
     // body + glow
@@ -554,18 +696,16 @@ function drawBall() {
     }
 
     // ── queue below ──
-    if (!G.isShooting) {
-        const sizes=[br*0.7, br*0.55, br*0.4];
-        const opac =[0.55, 0.3, 0.15];
-        let oy = b.y + br + 16;
-        for (let i=0; i<3; i++) {
-            const c=G.ballQueue[i]; if(!c) continue;
-            const r=sizes[i];
-            ctx.save(); ctx.globalAlpha=opac[i]; ctx.shadowColor=c; ctx.shadowBlur=8;
-            ctx.beginPath(); ctx.arc(b.x,oy+r,r,0,Math.PI*2);
-            ctx.fillStyle=c; ctx.fill(); ctx.restore();
-            oy += r*2+6;
-        }
+    const sizes=[br*0.7, br*0.55, br*0.4];
+    const opac =[0.55, 0.3, 0.15];
+    let oy = cfg.shooterY + br + 16;
+    for (let i=0; i<3; i++) {
+        const c=G.ballQueue[i]; if(!c) continue;
+        const r=sizes[i];
+        ctx.save(); ctx.globalAlpha=opac[i]; ctx.shadowColor=c; ctx.shadowBlur=8;
+        ctx.beginPath(); ctx.arc(cfg.centerX, oy+r, r, 0, Math.PI*2);
+        ctx.fillStyle=c; ctx.fill(); ctx.restore();
+        oy += r*2+6;
     }
 }
 
