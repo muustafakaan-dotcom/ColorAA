@@ -666,12 +666,12 @@ function drawBall() {
             const secs = Math.max(1, Math.ceil(remaining / 1000));
             ctx.save();
             ctx.fillStyle = b.color;
-            ctx.font = `800 ${br * 2.5}px Inter`;
+            ctx.font = `800 ${br * 3.5}px Inter`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
             ctx.shadowColor = b.color;
             ctx.shadowBlur = 12;
-            ctx.fillText(secs, b.x, b.y - br * 2.2);
+            ctx.fillText(secs, b.x, b.y - br * 2.8);
             ctx.restore();
         }
     }
