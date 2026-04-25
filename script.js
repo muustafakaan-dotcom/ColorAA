@@ -35,12 +35,159 @@ const screens = {
     home:     document.getElementById('screen-home'),
     levels:   document.getElementById('screen-levels'),
     levelup:  document.getElementById('screen-levelup'),
+    settings: document.getElementById('screen-settings'),
 };
 
 // ============================================================
-// PROGRESS
+// AUDIO SYSTEM
+// ============================================================
+
+let audioCtx = null;
+let bgmInterval = null;
+let bgmNextNoteTime = 0;
+let bgmCurrentNote = 0;
+
+// Mario-style upbeat retro frequencies (C Major)
+const N_G3 = 196.00, N_A3 = 220.00, N_B3 = 246.94;
+const N_C4 = 261.63, N_D4 = 293.66, N_E4 = 329.63, N_F4 = 349.23;
+const N_G4 = 392.00, N_A4 = 440.00, N_B4 = 493.88, N_C5 = 523.25;
+const N_D5 = 587.33, N_E5 = 659.25, N_F5 = 698.46, N_G5 = 783.99, N_A5 = 880.00, REST = 0;
+
+const P_C = [N_C4, N_E4, N_G4, N_E4, N_C5, N_G4, N_E4, N_C4]; 
+const P_F = [N_F4, N_A4, N_C5, N_A4, N_F5, N_C5, N_A4, N_F4];
+const P_G = [N_G4, N_B4, N_D5, N_B4, N_G5, N_D5, N_B4, N_G4];
+const P_Am = [N_A4, N_C5, N_E5, N_C5, N_A5, N_E5, N_C5, N_A4];
+const P_C_desc = [N_C5, REST, N_G4, REST, N_E4, REST, N_C4, REST];
+const P_G_desc = [N_G5, REST, N_D5, REST, N_B4, REST, N_G4, REST];
+const P_F_desc = [N_F5, REST, N_C5, REST, N_A4, REST, N_F4, REST];
+const P_Walk = [N_C4, N_D4, N_E4, N_F4, N_G4, N_A4, N_B4, N_C5];
+const P_Walk_D = [N_C5, N_B4, N_A4, N_G4, N_F4, N_E4, N_D4, N_C4];
+
+const patterns = [P_C, P_F, P_G, P_Am, P_C_desc, P_G_desc, P_F_desc, P_Walk, P_Walk_D];
+const songStructure = [
+    0, 0, 1, 1,  0, 0, 2, 2,  // Verse
+    0, 3, 1, 2,  0, 3, 4, 5,  
+    0, 7, 1, 8,  0, 7, 2, 5,  // Chorus
+    3, 3, 1, 1,  2, 2, 4, 5,  
+    0, 0, 1, 1,  0, 0, 2, 2,  // Verse 2
+    0, 3, 1, 2,  0, 3, 6, 5,  
+    0, 7, 1, 8,  0, 7, 2, 5,  // Chorus 2
+    3, 3, 1, 1,  2, 2, 8, 4   // Outro walk down
+];
+let bgmNotes = [];
+for(let p of songStructure) bgmNotes.push(...patterns[p]);
+const bgmTempo = 150; 
+const bgmNoteLength = (60.0 / bgmTempo) / 4; // 16th notes (fast and bouncy)
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        bgmNextNoteTime = audioCtx.currentTime + 0.1;
+        bgmInterval = setInterval(scheduleBGM, 25);
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
+
+// Unlock audio on first interaction
+window.addEventListener('mousedown', initAudio, { once: true });
+window.addEventListener('touchstart', initAudio, { once: true });
+
+function playTone(freq, type, duration, vol, slideFreq) {
+    if (!audioSettings.sfx) return;
+    if (!audioCtx || audioCtx.state === 'suspended') return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = type;
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    const now = audioCtx.currentTime;
+    
+    osc.frequency.setValueAtTime(freq, now);
+    if (slideFreq) {
+        osc.frequency.exponentialRampToValueAtTime(slideFreq, now + duration);
+    }
+    
+    gain.gain.setValueAtTime(vol, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    
+    osc.start(now);
+    osc.stop(now + duration);
+}
+
+function playBGMNote(freq, time) {
+    if (!audioSettings.bgm) return;
+    if (!audioCtx || audioCtx.state === 'suspended' || freq === 0) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = 'square'; // Classic 8-bit Atari/Mario sound
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.frequency.setValueAtTime(freq, time);
+    
+    // Bouncy staccato envelope
+    gain.gain.setValueAtTime(0, time);
+    gain.gain.linearRampToValueAtTime(0.02, time + 0.01); // Sharp attack, very low volume 0.02
+    gain.gain.exponentialRampToValueAtTime(0.001, time + bgmNoteLength * 0.8); // Quick decay for bounce
+    
+    osc.start(time);
+    osc.stop(time + bgmNoteLength);
+}
+
+function scheduleBGM() {
+    if (!audioCtx || audioCtx.state === 'suspended') return;
+    
+    while (bgmNextNoteTime < audioCtx.currentTime + 0.1) {
+        playBGMNote(bgmNotes[bgmCurrentNote], bgmNextNoteTime);
+        bgmNextNoteTime += bgmNoteLength;
+        bgmCurrentNote = (bgmCurrentNote + 1) % bgmNotes.length;
+    }
+}
+
+function playSoundShoot() { playTone(300, 'sine', 0.1, 0.3, 100); }
+function playSoundHit(combo) {
+    const baseFreq = 120;
+    const pitchShift = Math.min(combo * 15, 150); 
+    // Slide down frequency to create a "dub / tok" sound
+    playTone(baseFreq + pitchShift, 'sine', 0.15, 0.6, 40);
+}
+function playSoundError() { playTone(150, 'sawtooth', 0.3, 0.5, 50); }
+function playSoundStar(starIndex) {
+    const freqs = [0, 523.25, 659.25, 783.99]; 
+    playTone(freqs[starIndex], 'sine', 0.3, 0.5);
+    playTone(freqs[starIndex] * 2, 'triangle', 0.4, 0.2);
+}
+function playSoundLevelUp() {
+    setTimeout(() => playTone(440, 'square', 0.1, 0.2), 0);
+    setTimeout(() => playTone(554.37, 'square', 0.1, 0.2), 100);
+    setTimeout(() => playTone(659.25, 'square', 0.3, 0.2), 200);
+}
+function playSoundTick() { playTone(800, 'square', 0.05, 0.05, 400); }
+function playSoundRoulette() { playTone(1200, 'sine', 0.05, 0.1); }
+
+// ============================================================
+// PROGRESS & SETTINGS
 // ============================================================
 const SKEY = 'coloraa_progress';
+const SETTINGS_KEY = 'coloraa_settings';
+let audioSettings = { bgm: true, sfx: true };
+
+function loadSettings() {
+    try { 
+        const s = JSON.parse(localStorage.getItem(SETTINGS_KEY)); 
+        if (s) audioSettings = { ...audioSettings, ...s }; 
+    } catch(e){}
+    document.getElementById('toggle-bgm').checked = audioSettings.bgm;
+    document.getElementById('toggle-sfx').checked = audioSettings.sfx;
+}
+function saveSettings() { 
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(audioSettings)); 
+}
 
 function loadProgress() {
     try { const d = JSON.parse(localStorage.getItem(SKEY)); if(d&&d.done) { if(!d.stars) d.stars={}; return d; } } catch(e){}
@@ -267,6 +414,8 @@ function shoot() {
     G.isShooting = true;
     G.shotsFired++;
     G.ball.vy = -cfg.ballSpeed;
+    if (audioCtx) initAudio();
+    playSoundShoot();
 }
 
 // ============================================================
@@ -305,6 +454,7 @@ function checkHit(isTop) {
 
     if (hit.isTrap) {
         G.combo = 0;
+        playSoundError();
         G.shakeTimer = 20;
         G.shakeIntensity = 12;
         G.loseFlash = 1.0;
@@ -321,6 +471,7 @@ function checkHit(isTop) {
         hit.alive = false;
         G.combo++;
         if (G.combo > G.maxCombo) G.maxCombo = G.combo;
+        playSoundHit(G.combo);
         G.ringPulse = 1;
 
         // Update queue colors to only contain alive colors
@@ -344,6 +495,7 @@ function checkHit(isTop) {
 
         if (G.segments.filter(s=>!s.isTrap).every(s=>!s.alive)) {
             G.state = 'levelup';
+            playSoundLevelUp();
             
             let stars = 1;
             if (G.shotsFired <= G.totalSegments) stars = 3;
@@ -360,6 +512,10 @@ function checkHit(isTop) {
                 star.textContent = '★';
                 star.style.animationDelay = `${(i-1)*0.15}s`;
                 starsContainer.appendChild(star);
+                
+                if (i <= stars) {
+                    setTimeout(() => playSoundStar(i), (i-1) * 150 + 300);
+                }
             }
 
             document.getElementById('btn-nextlevel').style.display = G.level>=TOTAL_LEVELS ? 'none' : '';
@@ -370,8 +526,9 @@ function checkHit(isTop) {
         refreshHUD();
         spawnBall();
     } else {
-        // ❌ Wrong color — flash "KAYBETTİN" then restart
+        // ❌ Wrong color
         G.combo = 0;
+        playSoundError();
         G.shakeTimer = 20;
         G.shakeIntensity = 12;
         G.loseFlash = 1.0;
@@ -462,7 +619,11 @@ function update() {
         
         if (G.level > 70 && G.level <= 80) {
             G.continuousRotation = (G.continuousRotation || G.rotation) + G.rotationSpeed;
-            G.rotation = Math.round(G.continuousRotation / (Math.PI/12)) * (Math.PI/12);
+            const newRot = Math.round(G.continuousRotation / (Math.PI/12)) * (Math.PI/12);
+            if (newRot !== G.rotation) {
+                G.rotation = newRot;
+                playSoundTick();
+            }
         } else {
             G.rotation += G.rotationSpeed * speedMult;
         }
@@ -490,6 +651,7 @@ function update() {
                 let idx = aliveColors.indexOf(G.ball.color);
                 if (idx === -1) idx = 0;
                 G.ball.color = aliveColors[(idx + 1) % aliveColors.length];
+                playSoundRoulette();
             }
         }
     }
@@ -764,6 +926,28 @@ document.getElementById('btn-back-home').addEventListener('click', (e)=>{
     showHome();
 });
 
+// Home → Settings
+document.getElementById('btn-settings').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    showScreen('settings');
+});
+
+// Settings → Back
+document.getElementById('btn-close-settings').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    showHome();
+});
+
+// Setting Toggles
+document.getElementById('toggle-bgm').addEventListener('change', (e)=>{
+    audioSettings.bgm = e.target.checked;
+    saveSettings();
+});
+document.getElementById('toggle-sfx').addEventListener('change', (e)=>{
+    audioSettings.sfx = e.target.checked;
+    saveSettings();
+});
+
 // HUD → Home
 document.getElementById('btn-hud-home').addEventListener('click', (e)=>{
     e.stopPropagation();
@@ -805,4 +989,5 @@ function shuffle(a) { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.ran
 // BOOT
 // ============================================================
 
+loadSettings();
 gameLoop();
