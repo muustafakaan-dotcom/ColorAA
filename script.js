@@ -483,7 +483,7 @@ function update() {
     // Color Roulette for 61-70
     if (G.state === 'playing' && G.level > 60 && G.level <= 70 && G.ball && !G.isShooting) {
         if (!G.colorLastChange) G.colorLastChange = Date.now();
-        if (Date.now() - G.colorLastChange > 5000) {
+        if (Date.now() - G.colorLastChange > 3000) {
             G.colorLastChange = Date.now();
             const aliveColors = [...new Set(G.segments.filter(s=>s.alive && !s.isTrap).map(s=>s.color))];
             if (aliveColors.length > 1) {
@@ -662,7 +662,7 @@ function drawBall() {
 
         // 61-70 Countdown timer
         if (G.level > 60 && G.level <= 70 && G.state === 'playing') {
-            const remaining = 5000 - (Date.now() - (G.colorLastChange || Date.now()));
+            const remaining = 3000 - (Date.now() - (G.colorLastChange || Date.now()));
             const secs = Math.max(1, Math.ceil(remaining / 1000));
             ctx.save();
             ctx.fillStyle = b.color;
