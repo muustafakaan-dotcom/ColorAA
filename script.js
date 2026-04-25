@@ -20,7 +20,7 @@ let G = {
     segments:[], ball:null, ballQueue:[],
     isShooting:false, particles:[],
     ringPulse:0, shakeTimer:0, shakeIntensity:0,
-    loseFlash:0,
+    loseFlash:0, shotsFired:0, totalSegments:0
 };
 
 let dpr=1, W=0, H=0;
@@ -43,15 +43,15 @@ const screens = {
 const SKEY = 'coloraa_progress';
 
 function loadProgress() {
-    try { const d = JSON.parse(localStorage.getItem(SKEY)); if(d&&d.done) return d; } catch(e){}
-    return { done:[], hi:{} };
+    try { const d = JSON.parse(localStorage.getItem(SKEY)); if(d&&d.done) { if(!d.stars) d.stars={}; return d; } } catch(e){}
+    return { done:[], hi:{}, stars:{} };
 }
 function saveProgress(p) { localStorage.setItem(SKEY, JSON.stringify(p)); }
 
-function markDone(lvl, score) {
+function markDone(lvl, stars) {
     const p = loadProgress();
     if (!p.done.includes(lvl)) p.done.push(lvl);
-    if (score > (p.hi[lvl]||0)) p.hi[lvl] = score;
+    p.stars[lvl] = Math.max(p.stars[lvl] || 0, stars);
     saveProgress(p);
 }
 
@@ -75,15 +75,16 @@ function buildGrid() {
     const grid = document.getElementById('levels-grid');
     grid.innerHTML = '';
     const highest = highestPlayable();
+    const p = loadProgress();
 
     for (let i = 1; i <= TOTAL_LEVELS; i++) {
         const btn = document.createElement('button');
         btn.className = 'lvl-circle';
 
-        const done = isDone(i);
+        const done = p.done.includes(i);
         const unlocked = isUnlocked(i);
 
-        if (i === highest && !isDone(i)) {
+        if (i === highest && !done) {
             btn.classList.add('current');
         } else if (done) {
             btn.classList.add('done');
@@ -93,9 +94,19 @@ function buildGrid() {
             btn.classList.add('locked');
         }
 
+        let subHtml = '';
+        if (done) {
+            const stars = p.stars[i] || 1;
+            subHtml = '<div class="lvl-stars-mini">';
+            for(let k=1; k<=3; k++) subHtml += `<span class="star-mini${k<=stars ? ' active' : ''}">★</span>`;
+            subHtml += '</div>';
+        } else {
+            subHtml = `<span class="lvl-sub">${unlocked ? 'OYNA' : '🔒'}</span>`;
+        }
+
         btn.innerHTML = `
             <span class="lvl-num">${i}</span>
-            <span class="lvl-sub">${done ? '✓' : (unlocked ? 'OYNA' : '🔒')}</span>
+            ${subHtml}
         `;
 
         if (unlocked || done) {
@@ -197,6 +208,7 @@ function getLevelConfig(lvl) {
 function generateLevel(lvl) {
     G.segments=[]; G.rotation=0; G.isShooting=false;
     G.combo=0; G.particles=[]; G.ringPulse=0;
+    G.shotsFired=0;
 
     const rng = seededRng(lvl * 7919);  // deterministic seed per level
     const cfg_lvl = getLevelConfig(lvl);
@@ -205,6 +217,7 @@ function generateLevel(lvl) {
 
     const pal = COLORS.slice(0, cfg_lvl.numColors);
     const nS  = cfg_lvl.numSegments;
+    G.totalSegments = nS;
     const sa  = (Math.PI * 2) / nS;
 
     const cl = [];
@@ -240,6 +253,7 @@ function spawnBall() {
 function shoot() {
     if (G.isShooting || G.state!=='playing' || !G.ball) return;
     G.isShooting = true;
+    G.shotsFired++;
     G.ball.vy = -cfg.ballSpeed;
 }
 
@@ -247,13 +261,8 @@ function shoot() {
 // COLLISION
 // ============================================================
 
-function checkHit() {
-    // Stop ball at the ring edge
-    G.ball.vy = 0;
-    G.ball.y = cfg.centerY + cfg.ringRadius + cfg.ringWidth / 2;
-    G.isShooting = false;
-
-    let la = Math.PI/2 - G.rotation;
+function checkHit(isTop) {
+    let la = (isTop ? -Math.PI/2 : Math.PI/2) - G.rotation;
     la = ((la%(Math.PI*2)) + Math.PI*2) % (Math.PI*2);
 
     let hit = null;
@@ -265,12 +274,21 @@ function checkHit() {
         else     { if (la>=s || la<e) { hit=seg; break; } }
     }
 
-    // If ball lands on a cleared gap, just respawn
+    // If ball lands on a cleared gap, let it pass through
     if (!hit) {
-        refreshHUD();
-        spawnBall();
+        if (isTop) G.ball.passedTop = true;
+        else G.ball.passedBottom = true;
         return;
     }
+
+    // Stop ball at the ring edge since it hit a segment
+    G.ball.vy = 0;
+    if (isTop) {
+        G.ball.y = cfg.centerY - (cfg.ringRadius - cfg.ringWidth / 2);
+    } else {
+        G.ball.y = cfg.centerY + cfg.ringRadius + cfg.ringWidth / 2;
+    }
+    G.isShooting = false;
 
     if (hit.color === G.ball.color) {
         // ✅ Correct
@@ -278,6 +296,16 @@ function checkHit() {
         G.combo++;
         if (G.combo > G.maxCombo) G.maxCombo = G.combo;
         G.ringPulse = 1;
+
+        // Update queue colors to only contain alive colors
+        const aliveColors = [...new Set(G.segments.filter(s=>s.alive).map(s=>s.color))];
+        if (aliveColors.length > 0) {
+            for (let i=0; i<G.ballQueue.length; i++) {
+                if (!aliveColors.includes(G.ballQueue[i])) {
+                    G.ballQueue[i] = aliveColors[Math.floor(Math.random()*aliveColors.length)];
+                }
+            }
+        }
 
         // Change rotation direction on every hit for levels 21-30
         if (G.level > 20 && G.level <= 30) {
@@ -290,10 +318,24 @@ function checkHit() {
 
         if (G.segments.every(s=>!s.alive)) {
             G.state = 'levelup';
-            const bonus = G.level*100;
-            markDone(G.level, 0);
+            
+            let stars = 1;
+            if (G.shotsFired <= G.totalSegments) stars = 3;
+            else if (G.shotsFired <= G.totalSegments + 3) stars = 2;
+            
+            markDone(G.level, stars);
             document.getElementById('completed-level').textContent = G.level;
-            document.getElementById('level-bonus').textContent = bonus;
+            
+            const starsContainer = document.getElementById('level-stars');
+            starsContainer.innerHTML = '';
+            for (let i = 1; i <= 3; i++) {
+                const star = document.createElement('span');
+                star.className = 'star' + (i <= stars ? ' active' : '');
+                star.textContent = '★';
+                star.style.animationDelay = `${(i-1)*0.15}s`;
+                starsContainer.appendChild(star);
+            }
+
             document.getElementById('btn-nextlevel').style.display = G.level>=TOTAL_LEVELS ? 'none' : '';
             showScreen('levelup');
             refreshHUD();
@@ -357,11 +399,20 @@ function update() {
     if (G.loseFlash>0) G.loseFlash -= 0.025;
 
     if (G.ball && G.isShooting) {
+        let oldY = G.ball.y;
         G.ball.y += G.ball.vy;
         G.ball.trail.push({x:G.ball.x, y:G.ball.y, a:1});
         if (G.ball.trail.length>12) G.ball.trail.shift();
-        const d = Math.hypot(G.ball.x-cfg.centerX, G.ball.y-cfg.centerY);
-        if (d <= cfg.ringRadius+cfg.ringWidth/2) checkHit();
+        
+        let bottomEdge = cfg.centerY + cfg.ringRadius + cfg.ringWidth/2;
+        let topEdge = cfg.centerY - (cfg.ringRadius - cfg.ringWidth/2);
+        
+        if (!G.ball.passedBottom && oldY > bottomEdge && G.ball.y <= bottomEdge) {
+            checkHit(false);
+        } else if (G.ball.passedBottom && !G.ball.passedTop && oldY > topEdge && G.ball.y <= topEdge) {
+            checkHit(true);
+        }
+        
         if (G.ball && G.ball.y<-50) spawnBall();
     }
 

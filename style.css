@@ -409,10 +409,46 @@ body {
     color: var(--text-dim);
 }
 
-.bonus-text {
-    font-size: 24px;
-    font-weight: 700;
+/* ===== STARS ===== */
+.level-stars {
+    display: flex;
+    gap: 12px;
+    margin: 8px 0;
+}
+
+.star {
+    font-size: 46px;
+    color: rgba(255,255,255,0.1);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.star.active {
     color: var(--yellow);
+    text-shadow: 0 0 20px rgba(255, 230, 109, 0.5);
+    animation: starPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes starPop {
+    0% { transform: scale(0); opacity: 0; }
+    80% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.lvl-stars-mini {
+    display: flex;
+    gap: 2px;
+    margin-top: 4px;
+}
+
+.lvl-stars-mini .star-mini {
+    font-size: 8px;
+    line-height: 1;
+    color: rgba(255,255,255,0.15);
+}
+
+.lvl-stars-mini .star-mini.active {
+    color: var(--yellow);
+    text-shadow: 0 0 8px rgba(255, 230, 109, 0.4);
 }
 
 /* ===== COMBO ===== */
