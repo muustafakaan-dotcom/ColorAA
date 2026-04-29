@@ -5,22 +5,64 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+const forestImage = new Image();
+forestImage.src = 'forest.png';
+
 // ── Colors & Palettes ──
 const PALETTES = {
     default: { id: 'default', name: 'Ana Palet', cost: 0, colors: ['#FF6B6B','#4ECDC4','#FFE66D','#7C5CFC','#F5E6CC','#6BCB77'] },
-    neon: { id: 'neon', name: 'Neon Geceler', cost: 2, colors: ['#FF007F','#00FFFF','#39FF14','#FFD700','#FF6F00','#BF00FF'] }
+    neon: { id: 'neon', name: 'Neon Geceler', cost: 0, colors: ['#FF007F','#00FFFF','#39FF14','#FFD700','#FF6F00','#BF00FF'] },
+    pastel: { id: 'pastel', name: 'Pastel Rüyası', cost: 0, colors: ['#FFB3BA','#FFDFBA','#FFFFBA','#BAFFC9','#BAE1FF','#E8BAFF'] },
+    contrast: { id: 'contrast', name: 'Yüksek Kontrast', cost: 0, colors: ['#FF2A2A','#2A2AFF','#FFEA00','#00E676','#D500F9','#FF6D00'] }
 };
 const SHAPES = {
     default: { id: 'default', name: 'Daire', cost: 0, icon: '●' },
-    star: { id: 'star', name: 'Yıldız', cost: 2, icon: '★' },
-    hexagon: { id: 'hexagon', name: 'Altıgen', cost: 2, icon: '⬢' },
-    heart: { id: 'heart', name: 'Kalp', cost: 2, icon: '♥' },
-    triangle: { id: 'triangle', name: 'Üçgen', cost: 2, icon: '▲' }
+    star: { id: 'star', name: 'Yıldız', cost: 0, icon: '★' },
+    hexagon: { id: 'hexagon', name: 'Altıgen', cost: 0, icon: '⬢' },
+    heart: { id: 'heart', name: 'Kalp', cost: 0, icon: '♥' },
+    triangle: { id: 'triangle', name: 'Üçgen', cost: 0, icon: '▲' },
+    snowflake: { id: 'snowflake', name: 'Kar Tanesi', cost: 0, icon: '❄️', isEmoji: true },
+    skull: { id: 'skull', name: 'Kuru Kafa', cost: 0, icon: '💀', isEmoji: true },
+    jet: { id: 'jet', name: 'Jet Uçak', cost: 0, icon: '✈️', isEmoji: true },
+    paw: { id: 'paw', name: 'Pati', cost: 0, icon: '🐾', isEmoji: true },
+    bird: { id: 'bird', name: 'Kuş', cost: 0, icon: '🐦', isEmoji: true },
+    sun: { id: 'sun', name: 'Güneş', cost: 0, icon: '☀️', isEmoji: true },
+    note: { id: 'note', name: 'Nota', cost: 0, icon: '🎵', isEmoji: true },
+    moon: { id: 'moon', name: 'Hilal', cost: 0, icon: '🌙', isEmoji: true },
+    bone: { id: 'bone', name: 'Kemik', cost: 0, icon: '🦴', isEmoji: true },
+    ghost: { id: 'ghost', name: 'Hayalet', cost: 0, icon: '👻', isEmoji: true },
+    butterfly: { id: 'butterfly', name: 'Kelebek', cost: 0, icon: '🦋' },
+    daisy: { id: 'daisy', name: 'Papatya', cost: 0, icon: '🌼', isEmoji: true },
+    cross: { id: 'cross', name: 'X İşareti', cost: 0, icon: '❌', isEmoji: true },
+    fire: { id: 'fire', name: 'Alev', cost: 0, icon: '🔥', isEmoji: true },
+    passenger_plane: { id: 'passenger_plane', name: 'Yolcu Uçağı', cost: 0, icon: '✈️', isEmoji: true, rotation: -45 * Math.PI / 180 },
+    letter: { id: 'letter', name: 'Mektup', cost: 0, icon: '✉️', isEmoji: true },
+    umbrella: { id: 'umbrella', name: 'Şemsiye', cost: 0, icon: '☂️', isEmoji: true },
+    dog: { id: 'dog', name: 'Köpek', cost: 0, icon: '🐶', isEmoji: true },
+    cat: { id: 'cat', name: 'Kedi', cost: 0, icon: '🐱', isEmoji: true },
+    car: { id: 'car', name: 'Araba', cost: 0, icon: '🚗', isEmoji: true },
+    glass: { id: 'glass', name: 'Kadeh', cost: 0, icon: '🍷', isEmoji: true },
+    leaf: { id: 'leaf', name: 'Yaprak', cost: 0, icon: '🍃', isEmoji: true },
+    dollar: { id: 'dollar', name: 'Dolar', cost: 0, icon: '💲', isEmoji: true },
+    euro: { id: 'euro', name: 'Euro', cost: 0, icon: '€', isEmoji: true },
+    ok_hand: { id: 'ok_hand', name: 'Okey', cost: 0, icon: '👍', isEmoji: true },
+    diamond: { id: 'diamond', name: 'Elmas', cost: 0, icon: '💎', isEmoji: true },
+    lightning: { id: 'lightning', name: 'Şimşek', cost: 0, icon: '⚡', isEmoji: true },
+    crown: { id: 'crown', name: 'Taç', cost: 0, icon: '👑', isEmoji: true },
+    rocket: { id: 'rocket', name: 'Roket', cost: 0, icon: '🚀', isEmoji: true, rotation: -45 * Math.PI / 180 },
+    anchor: { id: 'anchor', name: 'Çapa', cost: 0, icon: '⚓', isEmoji: true },
+    clover: { id: 'clover', name: 'Yonca', cost: 0, icon: '🍀', isEmoji: true },
+    invader: { id: 'invader', name: 'Uzaylı', cost: 0, icon: '👾', isEmoji: true },
+    guitar: { id: 'guitar', name: 'Gitar', cost: 0, icon: '🎸', isEmoji: true },
+    trophy: { id: 'trophy', name: 'Kupa', cost: 0, icon: '🏆', isEmoji: true },
+    mushroom: { id: 'mushroom', name: 'Mantar', cost: 0, icon: '🍄', isEmoji: true }
 };
 const BACKGROUNDS = {
     default: { id: 'default', name: 'Standart', cost: 0, icon: '⬛' },
-    grid: { id: 'grid', name: 'Retro Grid', cost: 3, icon: '▦' },
-    space: { id: 'space', name: 'Uzay', cost: 3, icon: '✨' }
+    grid: { id: 'grid', name: 'Retro Grid', cost: 0, icon: '▦' },
+    space: { id: 'space', name: 'Uzay', cost: 0, icon: '✨' },
+    radar: { id: 'radar', name: 'Sinyal', cost: 0, icon: '📡' },
+    forest: { id: 'forest', name: 'Orman', cost: 0, icon: '🌲' }
 };
 const POWERUPS = {
     rainbow: { id: 'rainbow', name: 'Gökkuşağı', cost: 0, icon: '🌈' },
@@ -372,7 +414,7 @@ function renderStore() {
     list.appendChild(palettesHeader);
 
     Object.values(PALETTES).forEach(pal => {
-        const isUnlocked = p.unlockedPalettes.includes(pal.id) || pal.cost === 0;
+        const isUnlocked = p.unlockedPalettes.includes(pal.id);
         const isEquipped = p.equippedPalette === pal.id;
         
         const card = document.createElement('div');
@@ -409,30 +451,39 @@ function renderStore() {
     shapesHeader.style.marginTop = '24px';
     list.appendChild(shapesHeader);
 
+    const grid = document.createElement('div');
+    grid.className = 'shape-grid';
+
     Object.values(SHAPES).forEach(shape => {
-        const isUnlocked = p.unlockedShapes.includes(shape.id) || shape.cost === 0;
+        const isUnlocked = p.unlockedShapes.includes(shape.id);
         const isEquipped = p.equippedShape === shape.id;
-        const card = document.createElement('div');
-        card.className = `palette-card ${isEquipped ? 'equipped' : ''}`;
-        
-        let btnHtml = '';
-        if (isEquipped) {
-            btnHtml = `<button class="btn-equipped" disabled>KULLANILIYOR</button>`;
-        } else if (isUnlocked) {
-            btnHtml = `<button class="btn-equip" onclick="equipShape('${shape.id}')">KULLAN</button>`;
-        } else {
-            const canAfford = availableStars >= shape.cost;
-            btnHtml = `<button class="btn-buy" ${canAfford ? '' : 'disabled'} onclick="buyShape('${shape.id}')">${shape.cost} ★ İLE AÇ</button>`;
-        }
-                     
-        card.innerHTML = `
-            <div class="palette-header">
-                <span class="palette-name"><span style="color:var(--teal);margin-right:8px">${shape.icon}</span>${shape.name}</span>
-            </div>
-            ${btnHtml}
+
+        const tile = document.createElement('div');
+        let stateClass = isEquipped ? 'shape-tile equipped' : isUnlocked ? 'shape-tile unlocked' : 'shape-tile locked';
+        tile.className = stateClass;
+        tile.title = shape.name;
+
+        const rotStyle = shape.rotation ? `transform: rotate(${shape.rotation}rad); display: inline-block;` : '';
+        tile.innerHTML = `
+            <span class="shape-tile-icon" style="${rotStyle}">${shape.icon}</span>
+            <span class="shape-tile-name">${shape.name}</span>
+            ${isEquipped ? '<span class="shape-tile-badge equipped-badge">✓</span>' : ''}
+            ${!isUnlocked ? `<span class="shape-tile-badge locked-badge">${shape.cost}★</span>` : ''}
         `;
-        list.appendChild(card);
+
+        tile.addEventListener('click', () => {
+            if (isEquipped) return;
+            if (isUnlocked) {
+                equipShape(shape.id);
+            } else {
+                buyShape(shape.id);
+            }
+        });
+
+        grid.appendChild(tile);
     });
+
+    list.appendChild(grid);
 
     const bgHeader = document.createElement('h3');
     bgHeader.className = 'store-section-title';
@@ -441,7 +492,7 @@ function renderStore() {
     list.appendChild(bgHeader);
 
     Object.values(BACKGROUNDS).forEach(bg => {
-        const isUnlocked = p.unlockedBackgrounds.includes(bg.id) || bg.cost === 0;
+        const isUnlocked = p.unlockedBackgrounds.includes(bg.id);
         const isEquipped = p.equippedBackground === bg.id;
         const card = document.createElement('div');
         card.className = `palette-card ${isEquipped ? 'equipped' : ''}`;
@@ -519,7 +570,7 @@ window.buyPowerup = function(id) {
 
 window.equipBackground = function(id) {
     const p = loadProgress();
-    if (p.unlockedBackgrounds.includes(id) || BACKGROUNDS[id].cost === 0) {
+    if (p.unlockedBackgrounds.includes(id)) {
         p.equippedBackground = id;
         saveProgress(p);
         CURRENT_BG = id;
@@ -549,7 +600,7 @@ window.buyBackground = function(id) {
 
 window.equipShape = function(id) {
     const p = loadProgress();
-    if (p.unlockedShapes.includes(id) || SHAPES[id].cost === 0) {
+    if (p.unlockedShapes.includes(id)) {
         p.equippedShape = id;
         saveProgress(p);
         CURRENT_SHAPE = id;
@@ -579,7 +630,7 @@ window.buyShape = function(id) {
 
 window.equipPalette = function(id) {
     const p = loadProgress();
-    if (p.unlockedPalettes.includes(id) || PALETTES[id].cost === 0) {
+    if (p.unlockedPalettes.includes(id)) {
         p.equippedPalette = id;
         saveProgress(p);
         COLORS = PALETTES[id].colors;
@@ -1181,6 +1232,41 @@ function draw() {
             if (s.y > H) s.y = 0;
         }
         ctx.restore();
+    } else if (CURRENT_BG === 'radar') {
+        ctx.save();
+        ctx.strokeStyle = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)';
+        ctx.lineWidth = 2;
+        const maxR = Math.max(W, H) * 1.2;
+        const t = Date.now() * 0.0008;
+        for (let i = 0; i < 4; i++) {
+            let phase = ((t + i * 0.25) % 1.0);
+            let r = phase * maxR;
+            ctx.globalAlpha = 1 - Math.pow(phase, 1.5); // non-linear fade for better aesthetics
+            ctx.beginPath();
+            ctx.arc(cfg.centerX, cfg.centerY, r, 0, Math.PI*2);
+            ctx.stroke();
+        }
+        ctx.restore();
+    } else if (CURRENT_BG === 'forest') {
+        if (forestImage.complete && forestImage.naturalWidth !== 0) {
+            ctx.save();
+            ctx.imageSmoothingEnabled = false; // keep retro pixel look sharp
+            const imgRatio = forestImage.width / forestImage.height;
+            const canvasRatio = W / H;
+            let w, h, x, y;
+            if (canvasRatio > imgRatio) {
+                w = W; h = W / imgRatio;
+                x = 0; y = (H - h) / 2;
+            } else {
+                h = H; w = H * imgRatio;
+                y = 0; x = (W - w) / 2;
+            }
+            ctx.drawImage(forestImage, x, y, w, h);
+            // Apply overlay tint to keep game elements readable
+            ctx.fillStyle = isLight ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.55)';
+            ctx.fillRect(0, 0, W, H);
+            ctx.restore();
+        }
     }
 
     ctx.save();
@@ -1308,9 +1394,45 @@ function drawShapePath(ctx, shape, x, y, r) {
         ctx.bezierCurveTo(x - r * 1.5, y - r * 1.2, x - r * 1.2, y + r * 0.8, x, y + r * 1.2);
         ctx.bezierCurveTo(x + r * 1.2, y + r * 0.8, x + r * 1.5, y - r * 1.2, x, y - r * 0.2);
         ctx.closePath();
+    } else if (shape === 'butterfly') {
+        ctx.moveTo(x, y - r * 0.3);
+        ctx.bezierCurveTo(x + r * 0.8, y - r * 1.3, x + r * 1.4, y - r * 0.1, x + r * 0.3, y + r * 0.2);
+        ctx.bezierCurveTo(x + r * 1.0, y + r * 0.7, x + r * 0.5, y + r * 1.2, x, y + r * 0.6);
+        ctx.bezierCurveTo(x - r * 0.5, y + r * 1.2, x - r * 1.0, y + r * 0.7, x - r * 0.3, y + r * 0.2);
+        ctx.bezierCurveTo(x - r * 1.4, y - r * 0.1, x - r * 0.8, y - r * 1.3, x, y - r * 0.3);
+        ctx.closePath();
     } else {
         ctx.arc(x, y, r, 0, Math.PI*2);
     }
+}
+
+const tintCanvas = document.createElement('canvas');
+const tintCtx = tintCanvas.getContext('2d');
+
+function drawTintedEmoji(ctx, emoji, x, y, r, color, rotation = 0) {
+    const size = r * 3;
+    if (tintCanvas.width !== Math.ceil(size)) {
+        tintCanvas.width = Math.ceil(size);
+        tintCanvas.height = Math.ceil(size);
+    } else {
+        tintCtx.clearRect(0, 0, size, size);
+    }
+    
+    tintCtx.save();
+    tintCtx.translate(size/2, size/2);
+    if (rotation) tintCtx.rotate(rotation);
+    tintCtx.font = `${r * 1.8}px Arial`;
+    tintCtx.textAlign = 'center';
+    tintCtx.textBaseline = 'middle';
+    tintCtx.fillText(emoji, 0, r * 0.1);
+    tintCtx.restore();
+    
+    tintCtx.globalCompositeOperation = 'source-in';
+    tintCtx.fillStyle = color;
+    tintCtx.fillRect(0, 0, size, size);
+    tintCtx.globalCompositeOperation = 'source-over';
+    
+    ctx.drawImage(tintCanvas, x - size/2, y - size/2);
 }
 
 function drawBall() {
@@ -1319,9 +1441,14 @@ function drawBall() {
 
     // trail
     for (const t of b.trail) {
-        drawShapePath(ctx, CURRENT_SHAPE, t.x, t.y, br*0.6);
-        ctx.fillStyle=b.color+Math.floor(t.a*40).toString(16).padStart(2,'0');
-        ctx.fill();
+        const tColor = b.color+Math.floor(t.a*40).toString(16).padStart(2,'0');
+        if (SHAPES[CURRENT_SHAPE].isEmoji) {
+            drawTintedEmoji(ctx, SHAPES[CURRENT_SHAPE].icon, t.x, t.y, br*0.6, tColor, SHAPES[CURRENT_SHAPE].rotation);
+        } else {
+            drawShapePath(ctx, CURRENT_SHAPE, t.x, t.y, br*0.6);
+            ctx.fillStyle = tColor;
+            ctx.fill();
+        }
     }
 
     // aim line
@@ -1350,11 +1477,21 @@ function drawBall() {
 
     // body + glow
     let ballColor = G.activeRainbow ? `hsl(${Date.now()%360}, 100%, 60%)` : b.color;
-    drawShapePath(ctx, CURRENT_SHAPE, b.x, b.y, br);
-    ctx.fillStyle=ballColor; ctx.fill();
-    ctx.save(); ctx.shadowColor=ballColor; ctx.shadowBlur=18;
-    drawShapePath(ctx, CURRENT_SHAPE, b.x, b.y, br);
-    ctx.fillStyle=ballColor; ctx.fill(); ctx.restore();
+    
+    if (SHAPES[CURRENT_SHAPE].isEmoji) {
+        drawTintedEmoji(ctx, SHAPES[CURRENT_SHAPE].icon, b.x, b.y, br, ballColor, SHAPES[CURRENT_SHAPE].rotation);
+        ctx.save(); 
+        ctx.shadowColor = ballColor; 
+        ctx.shadowBlur = 18;
+        drawTintedEmoji(ctx, SHAPES[CURRENT_SHAPE].icon, b.x, b.y, br, ballColor, SHAPES[CURRENT_SHAPE].rotation);
+        ctx.restore();
+    } else {
+        drawShapePath(ctx, CURRENT_SHAPE, b.x, b.y, br);
+        ctx.fillStyle=ballColor; ctx.fill();
+        ctx.save(); ctx.shadowColor=ballColor; ctx.shadowBlur=18;
+        drawShapePath(ctx, CURRENT_SHAPE, b.x, b.y, br);
+        ctx.fillStyle=ballColor; ctx.fill(); ctx.restore();
+    }
 
     // bomb outer glow (always visible when active, even while shooting)
     if (G.activeBomb) {
@@ -1374,8 +1511,10 @@ function drawBall() {
     }
 
     // highlight
-    drawShapePath(ctx, CURRENT_SHAPE, b.x-br*0.25, b.y-br*0.25, br*0.35);
-    ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.fill();
+    if (!SHAPES[CURRENT_SHAPE].isEmoji) {
+        drawShapePath(ctx, CURRENT_SHAPE, b.x-br*0.25, b.y-br*0.25, br*0.35);
+        ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.fill();
+    }
 
     // idle pulse
     if (!G.isShooting) {
@@ -1404,8 +1543,15 @@ function drawBall() {
         const c=G.ballQueue[i]; if(!c) continue;
         const r=sizes[i];
         ctx.save(); ctx.globalAlpha=opac[i]; ctx.shadowColor=c; ctx.shadowBlur=8;
-        drawShapePath(ctx, CURRENT_SHAPE, cfg.centerX, oy+r, r);
-        ctx.fillStyle=c; ctx.fill(); ctx.restore();
+        
+        if (SHAPES[CURRENT_SHAPE].isEmoji) {
+            drawTintedEmoji(ctx, SHAPES[CURRENT_SHAPE].icon, cfg.centerX, oy+r, r, c, SHAPES[CURRENT_SHAPE].rotation);
+        } else {
+            drawShapePath(ctx, CURRENT_SHAPE, cfg.centerX, oy+r, r);
+            ctx.fillStyle=c; ctx.fill();
+        }
+        
+        ctx.restore();
         oy += r*2+6;
     }
 }
@@ -1797,14 +1943,14 @@ window.claimAchievement = function(id) {
 
 const WHEEL_KEY = 'coloraa_last_spin';
 const WHEEL_PRIZES = [
-    { label: '1 ★', type: 'star', amount: 1, color: '#FFE66D' },
-    { label: '🌈', type: 'powerup', id: 'rainbow', amount: 1, color: '#FF6B6B' },
-    { label: '2 ★', type: 'star', amount: 2, color: '#F5C842' },
-    { label: '🛡️', type: 'powerup', id: 'shield', amount: 1, color: '#4ECDC4' },
-    { label: '3 ★', type: 'star', amount: 3, color: '#FF9F1C' },
-    { label: '💣', type: 'powerup', id: 'bomb', amount: 1, color: '#FF6F00' },
-    { label: '1 ★', type: 'star', amount: 1, color: '#FFE66D' },
-    { label: '🛡️', type: 'powerup', id: 'shield', amount: 1, color: '#4ECDC4' }
+    { label: '5 ★', type: 'star', amount: 5 },
+    { label: '🌈 x5', type: 'powerup', id: 'rainbow', amount: 5 },
+    { label: '10 ★', type: 'star', amount: 10 },
+    { label: '🛡️ x2', type: 'powerup', id: 'shield', amount: 2 },
+    { label: '20 ★', type: 'star', amount: 20 },
+    { label: '💣 x5', type: 'powerup', id: 'bomb', amount: 5 },
+    { label: '5 ★', type: 'star', amount: 5 },
+    { label: '🛡️ x5', type: 'powerup', id: 'shield', amount: 5 }
 ];
 
 let wheelSpinning = false;
@@ -1883,8 +2029,8 @@ function drawWheel(angle) {
         wCtx.moveTo(cx, cy);
         wCtx.arc(cx, cy, r, startAngle, endAngle);
         wCtx.closePath();
-        wCtx.fillStyle = WHEEL_PRIZES[i].color;
-        wCtx.globalAlpha = 0.25;
+        wCtx.fillStyle = COLORS[i % COLORS.length] || '#4ECDC4';
+        wCtx.globalAlpha = 0.35;
         wCtx.fill();
         wCtx.globalAlpha = 1;
         
@@ -1969,7 +2115,7 @@ function spinWheel() {
                 resultEl.textContent = `🎉 ${prize.amount} Yıldız kazandın!`;
             } else {
                 const puName = POWERUPS[prize.id].name;
-                resultEl.textContent = `🎉 ${puName} kazandın!`;
+                resultEl.textContent = `🎉 ${prize.amount} ${puName} kazandın!`;
             }
             resultEl.classList.remove('hidden');
             document.getElementById('btn-wheel-close').classList.remove('hidden');
