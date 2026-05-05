@@ -743,7 +743,6 @@ function generateLevel(lvl) {
     G.shotsFired=0;
     G.activeRainbow=false; G.activeShield=false; G.shieldsUsedThisLevel=0;
     G.activeBomb=false;
-    G.hasOuterRing=false; G.outerSegments=[]; G.outerRotation=0; G.outerRotationSpeed=0;
 
     const rng = seededRng(lvl * 7919);  // deterministic seed per level
     const cfg_lvl = getLevelConfig(lvl);
@@ -850,19 +849,15 @@ function shoot() {
 // COLLISION
 // ============================================================
 
-function checkHit(isTop, isOuter = false) {
-    let segments = isOuter ? G.outerSegments : G.segments;
-    let rotation = isOuter ? G.outerRotation : G.rotation;
-    let radius   = isOuter ? (cfg.ringRadius + cfg.ringWidth*1.5 + 30) : cfg.ringRadius;
-
+function checkHit(isTop) {
     const dy = G.ball.y - G.cy;
     const dx = G.ball.x - G.cx;
     let hitAngle = Math.atan2(dy, dx);
-    let la = hitAngle - rotation;
+    let la = hitAngle - G.rotation;
     la = ((la%(Math.PI*2)) + Math.PI*2) % (Math.PI*2);
 
     let hit = null;
-    for (const seg of segments) {
+    for (const seg of G.segments) {
         if (!seg.alive) continue;
         let s = ((seg.start%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
         let e = ((seg.end  %(Math.PI*2))+Math.PI*2)%(Math.PI*2);
@@ -871,18 +866,13 @@ function checkHit(isTop, isOuter = false) {
     }
 
     if (!hit) {
-        if (isOuter) {
-            if (isTop) G.ball.passedOuterTop = true;
-            else G.ball.passedOuterBottom = true;
-        } else {
-            if (isTop) G.ball.passedTop = true;
-            else G.ball.passedBottom = true;
-        }
+        if (isTop) G.ball.passedTop = true;
+        else G.ball.passedBottom = true;
         return;
     }
 
     G.ball.vy = 0;
-    const R = isTop ? (radius - cfg.ringWidth / 2) : (radius + cfg.ringWidth / 2);
+    const R = isTop ? (cfg.ringRadius - cfg.ringWidth / 2) : (cfg.ringRadius + cfg.ringWidth / 2);
     if (R*R >= dx*dx) {
         const hdy = Math.sqrt(R*R - dx*dx);
         G.ball.y = G.cy + (isTop ? -hdy : hdy);
@@ -925,23 +915,23 @@ function checkHit(isTop, isOuter = false) {
         G.ringPulse = 1;
 
         const ma = (hit.start+hit.end)/2 + G.rotation;
-        emitParticles(G.cx+Math.cos(ma)*radius, G.cy+Math.sin(ma)*radius, '#ffffff', 18);
+        emitParticles(G.cx+Math.cos(ma)*cfg.ringRadius, G.cy+Math.sin(ma)*cfg.ringRadius, '#ffffff', 18);
 
         // Bomb: destroy adjacent segments even if we just hit ice? 
         // Let's say bomb breaks the segment completely, not just the ice.
         if (G.activeBomb) {
             G.activeBomb = false;
             hit.alive = false; // bomb destroys the segment completely
-            const hitIdx = segments.indexOf(hit);
-            const nS = segments.length;
+            const hitIdx = G.segments.indexOf(hit);
+            const nS = G.segments.length;
             for (let offset = -1; offset <= 1; offset++) {
                 if (offset === 0) continue;
                 const adjIdx = (hitIdx + offset + nS) % nS;
-                const adj = segments[adjIdx];
+                const adj = G.segments[adjIdx];
                 if (adj.alive && !adj.isTrap) {
                     adj.alive = false;
-                    const adjMa = (adj.start+adj.end)/2 + rotation;
-                    emitParticles(G.cx+Math.cos(adjMa)*radius, G.cy+Math.sin(adjMa)*radius, adj.color, 18);
+                    const adjMa = (adj.start+adj.end)/2 + G.rotation;
+                    emitParticles(G.cx+Math.cos(adjMa)*cfg.ringRadius, G.cy+Math.sin(adjMa)*cfg.ringRadius, adj.color, 18);
                 }
             }
             G.shakeTimer = 15;
@@ -951,7 +941,7 @@ function checkHit(isTop, isOuter = false) {
         if (G.combo>=2) showCombo(G.combo);
 
         // Update queue colors
-        let aliveC = G.segments.filter(s=>s.alive && !s.isTrap).map(s=>s.color); if (G.hasOuterRing) aliveC = aliveC.concat(G.outerSegments.filter(s=>s.alive && !s.isTrap).map(s=>s.color)); const aliveColors = [...new Set(aliveC)];
+        const aliveColors = [...new Set(G.segments.filter(s=>s.alive && !s.isTrap).map(s=>s.color))];
         if (aliveColors.length > 0) {
             for (let i=0; i<G.ballQueue.length; i++) {
                 if (!aliveColors.includes(G.ballQueue[i])) {
@@ -985,7 +975,7 @@ function checkHit(isTop, isOuter = false) {
         G.ringPulse = 1;
 
         // Update queue colors to only contain alive colors
-        let aliveC = G.segments.filter(s=>s.alive && !s.isTrap).map(s=>s.color); if (G.hasOuterRing) aliveC = aliveC.concat(G.outerSegments.filter(s=>s.alive && !s.isTrap).map(s=>s.color)); const aliveColors = [...new Set(aliveC)];
+        const aliveColors = [...new Set(G.segments.filter(s=>s.alive && !s.isTrap).map(s=>s.color))];
         if (aliveColors.length > 0) {
             for (let i=0; i<G.ballQueue.length; i++) {
                 if (!aliveColors.includes(G.ballQueue[i])) {
@@ -999,22 +989,22 @@ function checkHit(isTop, isOuter = false) {
             G.rotationSpeed = -G.rotationSpeed;
         }
 
-        const ma = (hit.start+hit.end)/2 + rotation;
-        emitParticles(G.cx+Math.cos(ma)*radius, G.cy+Math.sin(ma)*radius, hit.color, 18);
+        const ma = (hit.start+hit.end)/2 + G.rotation;
+        emitParticles(G.cx+Math.cos(ma)*cfg.ringRadius, G.cy+Math.sin(ma)*cfg.ringRadius, hit.color, 18);
 
         // Bomb: destroy adjacent segments
         if (G.activeBomb) {
             G.activeBomb = false;
-            const hitIdx = segments.indexOf(hit);
-            const nS = segments.length;
+            const hitIdx = G.segments.indexOf(hit);
+            const nS = G.segments.length;
             for (let offset = -1; offset <= 1; offset++) {
                 if (offset === 0) continue; // already destroyed
                 const adjIdx = (hitIdx + offset + nS) % nS;
-                const adj = segments[adjIdx];
+                const adj = G.segments[adjIdx];
                 if (adj.alive && !adj.isTrap) {
                     adj.alive = false;
-                    const adjMa = (adj.start+adj.end)/2 + rotation;
-                    emitParticles(G.cx+Math.cos(adjMa)*radius, G.cy+Math.sin(adjMa)*radius, adj.color, 18);
+                    const adjMa = (adj.start+adj.end)/2 + G.rotation;
+                    emitParticles(G.cx+Math.cos(adjMa)*cfg.ringRadius, G.cy+Math.sin(adjMa)*cfg.ringRadius, adj.color, 18);
                 }
             }
             G.shakeTimer = 15;
@@ -1023,9 +1013,7 @@ function checkHit(isTop, isOuter = false) {
 
         if (G.combo>=2) showCombo(G.combo);
 
-        let allDead = G.segments.filter(s=>!s.isTrap).every(s=>!s.alive);
-        if (G.hasOuterRing) allDead = allDead && G.outerSegments.filter(s=>!s.isTrap).every(s=>!s.alive);
-        if (allDead) {
+        if (G.segments.filter(s=>!s.isTrap).every(s=>!s.alive)) {
             if (G.mode === 'endless') {
                 // Endless: refill ring with more segments
                 G.endlessHits += G.segments.filter(s=>!s.isTrap).length;
@@ -1233,9 +1221,7 @@ function update() {
             }
         } else {
             G.rotation += G.rotationSpeed * speedMult;
-        if (G.hasOuterRing) {
-            G.outerRotation += G.outerRotationSpeed * speedMult;
-        }
+        if (G.hasOuterRing) G.outerRotation += G.outerRotationSpeed * speedMult;
         }
     }
     if (G.ringPulse>0) G.ringPulse*=0.9;
@@ -1283,7 +1269,7 @@ function update() {
             } else if (G.ball.passedOuterBottom && !G.ball.passedOuterTop && oldD < roInner && d >= roInner && G.ball.y < G.cy) {
                 checkHit(true, true);
             }
-            if (!G.isShooting) return; // If hit, stop processing this frame
+            if (!G.isShooting) return; // If hit, stop processing
         }
 
         const rOuter = cfg.ringRadius + cfg.ringWidth/2;
@@ -1446,99 +1432,94 @@ function drawRing() {
     ctx.fillStyle='#4ECDC4'; ctx.fill();
     ctx.restore();
 
-    function drawSegments(segments, rotation, r) {
-        for (const seg of segments) {
-            if (!seg.alive) continue;
-            const sa=seg.start+rotation, ea=seg.end+rotation;
+    for (const seg of G.segments) {
+        if (!seg.alive) continue;
+        const sa=seg.start+G.rotation, ea=seg.end+G.rotation;
+        ctx.beginPath();
+        ctx.arc(cx,cy,r+rw/2,sa,ea);
+        ctx.arc(cx,cy,r-rw/2,ea,sa,true);
+        ctx.closePath();
+        if (seg.isFrosted) {
+            ctx.fillStyle = '#D4F1F9'; // Icy blue/white
+            ctx.globalAlpha = blinkAlpha;
+            ctx.fill();
+            ctx.save();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+            
+            // Add a little inner line to make it look like a block of ice
             ctx.beginPath();
-            ctx.arc(cx,cy,r+rw/2,sa,ea);
-            ctx.arc(cx,cy,r-rw/2,ea,sa,true);
-            ctx.closePath();
-            if (seg.isFrosted) {
-                ctx.fillStyle = '#D4F1F9'; // Icy blue/white
-                ctx.globalAlpha = blinkAlpha;
-                ctx.fill();
-                ctx.save();
-                ctx.strokeStyle = '#FFFFFF';
-                ctx.lineWidth = 2.5;
-                ctx.stroke();
-                
-                // Add a little inner line to make it look like a block of ice
-                ctx.beginPath();
-                ctx.arc(cx, cy, r, sa, ea);
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-                ctx.restore();
-            } else {
-                ctx.fillStyle=seg.color; 
-                ctx.globalAlpha = blinkAlpha;
-                ctx.fill();
-            }
+            ctx.arc(cx, cy, r, sa, ea);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+        } else {
+            ctx.fillStyle=seg.color; 
+            ctx.globalAlpha = blinkAlpha;
+            ctx.fill();
+        }
 
-            if (seg.isTrap) {
-                ctx.save();
-                ctx.strokeStyle = '#FF3B3B';
-                ctx.lineWidth = 2;
-                ctx.globalAlpha = blinkAlpha * 0.8;
-                const midAngle = (sa + ea)/2;
-                const trapX = cx + Math.cos(midAngle) * r;
-                const trapY = cy + Math.sin(midAngle) * r;
-                ctx.beginPath();
-                ctx.moveTo(trapX - 5, trapY - 5); ctx.lineTo(trapX + 5, trapY + 5);
-                ctx.moveTo(trapX + 5, trapY - 5); ctx.lineTo(trapX - 5, trapY + 5);
-                ctx.stroke();
-                ctx.restore();
-            }
-
-            if (seg.isShielded) {
-                ctx.save();
-                ctx.strokeStyle = '#ADB5BD'; // Silver shield color
-                ctx.lineWidth = 4;
-                ctx.lineCap = 'round';
-                ctx.globalAlpha = blinkAlpha;
-                ctx.beginPath();
-                let pad = (ea - sa) * 0.1;
-                ctx.arc(cx, cy, r + rw/2 + 5, sa + pad, ea - pad);
-                ctx.stroke();
-                
-                // Inner glow/shadow for metallic feel
-                ctx.shadowColor = '#ADB5BD';
-                ctx.shadowBlur = 8;
-                ctx.stroke();
-                
-                // Add a highlight
-                ctx.strokeStyle = '#FFFFFF';
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.arc(cx, cy, r + rw/2 + 5, sa + pad + (ea - sa)*0.1, sa + pad + (ea - sa)*0.3);
-                ctx.stroke();
-                ctx.restore();
-            }
-
-            ctx.save(); 
-            ctx.globalAlpha = 0.15 * blinkAlpha; 
-            ctx.shadowColor = seg.isFrosted ? '#FFFFFF' : seg.color; 
-            ctx.shadowBlur = 12;
-            ctx.beginPath(); 
-            ctx.arc(cx,cy,r+rw/2,sa,ea); 
-            ctx.arc(cx,cy,r-rw/2,ea,sa,true);
-            ctx.closePath(); 
-            ctx.fillStyle = seg.isFrosted ? '#FFFFFF' : seg.color;
-            ctx.fill(); 
+        if (seg.isTrap) {
+            ctx.save();
+            ctx.strokeStyle = '#FF3B3B';
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = blinkAlpha * 0.8;
+            const midAngle = (sa + ea)/2;
+            const trapX = cx + Math.cos(midAngle) * r;
+            const trapY = cy + Math.sin(midAngle) * r;
+            ctx.beginPath();
+            ctx.moveTo(trapX - 5, trapY - 5); ctx.lineTo(trapX + 5, trapY + 5);
+            ctx.moveTo(trapX + 5, trapY - 5); ctx.lineTo(trapX - 5, trapY + 5);
+            ctx.stroke();
             ctx.restore();
         }
-    }
 
-    drawSegments(G.segments, G.rotation, r);
-    if (G.hasOuterRing) drawSegments(G.outerSegments, G.outerRotation, r + rw*1.5 + 30);
+        if (seg.isShielded) {
+            ctx.save();
+            ctx.strokeStyle = '#ADB5BD'; // Silver shield color
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.globalAlpha = blinkAlpha;
+            ctx.beginPath();
+            let pad = (ea - sa) * 0.1;
+            ctx.arc(cx, cy, r + rw/2 + 5, sa + pad, ea - pad);
+            ctx.stroke();
+            
+            // Inner glow/shadow for metallic feel
+            ctx.shadowColor = '#ADB5BD';
+            ctx.shadowBlur = 8;
+            ctx.stroke();
+            
+            // Add a highlight
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r + rw/2 + 5, sa + pad + (ea - sa)*0.1, sa + pad + (ea - sa)*0.3);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        ctx.save(); 
+        ctx.globalAlpha = 0.15 * blinkAlpha; 
+        ctx.shadowColor = seg.isFrosted ? '#FFFFFF' : seg.color; 
+        ctx.shadowBlur = 12;
+        ctx.beginPath(); 
+        ctx.arc(cx,cy,r+rw/2,sa,ea); 
+        ctx.arc(cx,cy,r-rw/2,ea,sa,true);
+        ctx.closePath(); 
+        ctx.fillStyle = seg.isFrosted ? '#FFFFFF' : seg.color;
+        ctx.fill(); 
+        ctx.restore();
+    }
 
     ctx.beginPath(); ctx.arc(cx,cy,r-rw/2-2,0,Math.PI*2);
     const isLight = document.body.classList.contains('light-mode');
     ctx.fillStyle = isLight ? 'rgba(230,235,245,0.5)' : 'rgba(16,18,26,0.5)'; 
     ctx.globalAlpha = blinkAlpha; ctx.fill();
 
-    const rem = G.segments.filter(s=>s.alive && !s.isTrap).length + (G.hasOuterRing ? G.outerSegments.filter(s=>s.alive && !s.isTrap).length : 0);
+    const rem = G.segments.filter(s=>s.alive && !s.isTrap).length;
     ctx.fillStyle = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)';
     ctx.globalAlpha = blinkAlpha;
     ctx.font=`${r*0.5}px Inter`; ctx.textAlign='center'; ctx.textBaseline='middle';
