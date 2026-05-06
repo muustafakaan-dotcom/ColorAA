@@ -73,7 +73,8 @@ let COLORS = PALETTES.default.colors;
 let CURRENT_SHAPE = 'default';
 let CURRENT_BG = 'default';
 let bgStars = [];
-const TOTAL_LEVELS = 110;
+const TOTAL_LEVELS = 200;
+const COMBO_WINDOW = 2500; // ms — combo continues only if next hit is within this window
 
 // ── Layout Config ──
 let cfg = { ringRadius:120, ringWidth:28, ballRadius:13, ballSpeed:10, shooterY:600, centerX:0, centerY:0 };
@@ -93,6 +94,7 @@ let G = {
 };
 
 let dpr=1, W=0, H=0;
+let cachedHelpers = { colorIndicator: false, extendedAim: false };
 
 // ── DOM ──
 const $level   = document.getElementById('hud-level');
@@ -266,7 +268,7 @@ function saveSettings() {
 }
 
 function loadProgress() {
-    let p = { done:[], hi:{}, stars:{}, unlockedPalettes:['default'], equippedPalette:'default', unlockedShapes:['default'], equippedShape:'default', unlockedBackgrounds:['default'], equippedBackground:'default', starsSpent:0, inventory:{ rainbow: 0, shield: 0, bomb: 0 } };
+    let p = { done:[], hi:{}, stars:{}, unlockedPalettes:['default'], equippedPalette:'default', unlockedShapes:['default'], equippedShape:'default', unlockedBackgrounds:['default'], equippedBackground:'default', starsSpent:0, inventory:{ rainbow: 0, shield: 0, bomb: 0 }, helpers:{ colorIndicator: false, extendedAim: false } };
     try { 
         const d = JSON.parse(localStorage.getItem(SKEY)); 
         if(d && d.done) { 
@@ -280,6 +282,9 @@ function loadProgress() {
             if(!d.inventory) d.inventory={ rainbow: 0, shield: 0, bomb: 0 };
             if(d.inventory.bomb === undefined) d.inventory.bomb = 0;
             if(d.starsSpent === undefined) d.starsSpent=0;
+            if(!d.helpers) d.helpers = { colorIndicator: false, extendedAim: false };
+            if(d.helpers.colorIndicator === undefined) d.helpers.colorIndicator = false;
+            if(d.helpers.extendedAim === undefined) d.helpers.extendedAim = false;
             return d; 
         } 
     } catch(e){}
@@ -515,6 +520,38 @@ function renderStore() {
         `;
         list.appendChild(card);
     });
+
+    // ── YARDIMCILAR (Helpers) ──
+    const helpersHeader = document.createElement('h3');
+    helpersHeader.className = 'store-section-title';
+    helpersHeader.textContent = 'YARDIMCILAR';
+    helpersHeader.style.marginTop = '24px';
+    list.appendChild(helpersHeader);
+
+    const HELPERS = [
+        { id: 'colorIndicator', name: 'Renk Göstergesi', icon: '🎯', desc: 'Ortadaki sayı topun renginde görünür' },
+        { id: 'extendedAim', name: 'Uzun Nişangah', icon: '📏', desc: 'Nişan çizgisi çemberin karşısına kadar uzar' }
+    ];
+
+    HELPERS.forEach(helper => {
+        const isActive = p.helpers[helper.id];
+        const card = document.createElement('div');
+        card.className = 'palette-card';
+        card.innerHTML = `
+            <div class="palette-header" style="flex-direction:column; align-items:flex-start; gap:4px;">
+                <div style="display:flex; align-items:center; gap:8px; width:100%;">
+                    <span style="font-size:20px;">${helper.icon}</span>
+                    <span class="palette-name" style="flex:1;">${helper.name}</span>
+                    <label class="toggle-switch" style="margin:0;">
+                        <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleHelper('${helper.id}', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <span style="font-size:11px; color:var(--text-dim); padding-left:28px;">${helper.desc}</span>
+            </div>
+        `;
+        list.appendChild(card);
+    });
 }
 
 function showPowerups() {
@@ -659,6 +696,13 @@ window.buyPalette = function(id) {
     }
 };
 
+window.toggleHelper = function(id, enabled) {
+    const p = loadProgress();
+    p.helpers[id] = enabled;
+    saveProgress(p);
+    cachedHelpers = { ...p.helpers };
+};
+
 // ============================================================
 // RESIZE
 // ============================================================
@@ -719,8 +763,8 @@ function getLevelConfig(lvl) {
     if (lvl <= 10) {
         // Tutorial / easy levels
         const colors = Math.min(lvl, 3);        // 1→1, 2→2, 3→3, 4-10→3
-        const segs   = 6 + lvl;                  // 7..16
-        const speed  = 0.006 + (lvl - 1) * 0.001; // very slow ramp
+        const segs   = 4 + lvl;                  // 5..14 (was 7..16)
+        const speed  = 0.010 + (lvl - 1) * 0.001; // starts faster, ramps gently
         return { numColors: colors, numSegments: segs, speed };
     } else {
         // Normal levels 11-80
@@ -740,7 +784,7 @@ function getLevelConfig(lvl) {
 function generateLevel(lvl) {
     G.segments=[]; G.rotation=0; G.isShooting=false;
     G.combo=0; G.particles=[]; G.ringPulse=0;
-    G.shotsFired=0;
+    G.shotsFired=0; G.lastHitTime=0;
     G.activeRainbow=false; G.activeShield=false; G.shieldsUsedThisLevel=0;
     G.activeBomb=false;
     G.hasOuterRing=false; G.outerSegments=[]; G.outerRotation=0; G.outerRotationSpeed=0;
@@ -763,8 +807,23 @@ function generateLevel(lvl) {
         G.segments.push({ start: i * sa, end: (i + 1) * sa, color: cl[i], originalColor: cl[i], alive: true, isTrap: false });
     }
 
-    if (lvl > 50 && lvl <= 60) {
-        const numTraps = 2;
+    // ── Create outer ring FIRST (before applying any mechanics) ──
+    if (lvl > 100) {
+        G.hasOuterRing = true;
+        G.outerRotationSpeed = -G.rotationSpeed;
+        const outerS = Math.min(nS + 8, 30);
+        const outerSa = (Math.PI * 2) / outerS;
+        const clO = [];
+        for (let i = 0; i < outerS; i++) clO.push(pal[i % cfg_lvl.numColors]);
+        seededShuffle(clO, rng);
+        for (let i = 0; i < outerS; i++) {
+            G.outerSegments.push({ start: i * outerSa, end: (i + 1) * outerSa, color: clO[i], originalColor: clO[i], alive: true, isTrap: false });
+        }
+    }
+
+    // ── Inner ring traps (51-60, 121-130 inner traps, 171-180 inner traps) ──
+    if ((lvl > 50 && lvl <= 60) || (lvl > 120 && lvl <= 130) || (lvl > 170 && lvl <= 180)) {
+        let numTraps = Math.max(2, Math.floor(nS * 0.15));
         let trapIndices = [];
         for(let i=0; i<nS; i++) trapIndices.push(i);
         seededShuffle(trapIndices, rng);
@@ -774,13 +833,31 @@ function generateLevel(lvl) {
         }
     }
 
-    if (lvl > 80 && lvl <= 90) {
-        for (let i = 0; i < nS; i++) {
-            G.segments[i].isFrosted = true;
+    // ── Outer ring traps (141-150) ──
+    if (lvl > 140 && lvl <= 150) {
+        let nSO = G.outerSegments.length;
+        let numTraps = Math.max(2, Math.floor(nSO * 0.15));
+        let trapIndices = [];
+        for(let i=0; i<nSO; i++) trapIndices.push(i);
+        seededShuffle(trapIndices, rng);
+        for(let i=0; i<numTraps; i++) {
+            G.outerSegments[trapIndices[i]].isTrap = true;
+            G.outerSegments[trapIndices[i]].color = '#1a1a24';
         }
     }
 
-    if (lvl > 90 && lvl <= 100) {
+    // ── Frosted inner ring (81-90, 141-150) ──
+    if ((lvl > 80 && lvl <= 90) || (lvl > 140 && lvl <= 150)) {
+        for (let i = 0; i < nS; i++) G.segments[i].isFrosted = true;
+    }
+
+    // ── Frosted outer ring (111-120, 161-170) ──
+    if ((lvl > 110 && lvl <= 120) || (lvl > 160 && lvl <= 170)) {
+        for (let i = 0; i < G.outerSegments.length; i++) G.outerSegments[i].isFrosted = true;
+    }
+
+    // ── Shielded inner ring (91-100, 131-140, 161-170, 191-200) ──
+    if ((lvl > 90 && lvl <= 100) || (lvl > 130 && lvl <= 140) || (lvl > 160 && lvl <= 170) || (lvl > 190 && lvl <= 200)) {
         let targetShieldCount = Math.floor(nS * 0.4);
         let shieldCount = 0;
         let indices = [];
@@ -796,17 +873,21 @@ function generateLevel(lvl) {
         }
     }
 
-
-    if (lvl > 100 && lvl <= 110) {
-        G.hasOuterRing = true;
-        G.outerRotationSpeed = -G.rotationSpeed;
-        const outerS = Math.min(nS + 8, 30);
-        const outerSa = (Math.PI * 2) / outerS;
-        const clO = [];
-        for (let i = 0; i < outerS; i++) clO.push(pal[i % cfg_lvl.numColors]);
-        seededShuffle(clO, rng);
-        for (let i = 0; i < outerS; i++) {
-            G.outerSegments.push({ start: i * outerSa, end: (i + 1) * outerSa, color: clO[i], originalColor: clO[i], alive: true, isTrap: false });
+    // ── Shielded outer ring (151-160, 181-190) ──
+    if ((lvl > 150 && lvl <= 160) || (lvl > 180 && lvl <= 190)) {
+        let nSO = G.outerSegments.length;
+        let targetShieldCount = Math.floor(nSO * 0.4);
+        let shieldCount = 0;
+        let indices = [];
+        for(let i=0; i<nSO; i++) indices.push(i);
+        seededShuffle(indices, rng);
+        for (let idx of indices) {
+            let oppositeIdx = (idx + Math.floor(nSO / 2)) % nSO;
+            if (!G.outerSegments[oppositeIdx].isShielded) {
+                G.outerSegments[idx].isShielded = true;
+                shieldCount++;
+                if (shieldCount >= targetShieldCount) break;
+            }
         }
     }
 
@@ -850,6 +931,42 @@ function shoot() {
 // COLLISION
 // ============================================================
 
+function triggerDeath() {
+    G.combo = 0;
+    playSoundError();
+    G.shakeTimer = 20;
+    G.shakeIntensity = 12;
+    G.loseFlash = 1.0;
+    if (G.ball) emitParticles(G.ball.x, G.ball.y, '#FF3B3B', 20);
+
+    const rem = G.segments.filter(s=>s.alive && !s.isTrap).length + (G.hasOuterRing ? G.outerSegments.filter(s=>s.alive && !s.isTrap).length : 0);
+    if (rem > 0 && rem < 5 && G.mode === 'campaign') {
+        G.secondChanceSnapshot = {
+            level: G.level,
+            segments: JSON.parse(JSON.stringify(G.segments)),
+            outerSegments: JSON.parse(JSON.stringify(G.outerSegments)),
+            rotation: G.rotation,
+            outerRotation: G.outerRotation,
+            rotationSpeed: G.rotationSpeed,
+            outerRotationSpeed: G.outerRotationSpeed,
+            score: G.score,
+            shotsFired: G.shotsFired,
+            hasOuterRing: G.hasOuterRing,
+            ballQueue: [...G.ballQueue],
+            totalSegments: G.totalSegments
+        };
+    } else {
+        G.secondChanceSnapshot = null;
+    }
+
+    G.state = 'dead';
+    if (G.mode === 'endless') {
+        setTimeout(() => { if (G.state === 'dead') showEndlessGameOver(); }, 800);
+    } else {
+        setTimeout(() => { if (G.state === 'dead') startLevel(G.level); }, 800);
+    }
+}
+
 function checkHit(isTop, isOuter = false) {
     let segments = isOuter ? G.outerSegments : G.segments;
     let rotation = isOuter ? G.outerRotation : G.rotation;
@@ -890,18 +1007,7 @@ function checkHit(isTop, isOuter = false) {
     G.isShooting = false;
 
     if (hit.isTrap || (hit.isShielded && !isTop)) {
-        G.combo = 0;
-        playSoundError();
-        G.shakeTimer = 20;
-        G.shakeIntensity = 12;
-        G.loseFlash = 1.0;
-        emitParticles(G.ball.x, G.ball.y, '#FF3B3B', 20);
-        G.state = 'dead';
-        if (G.mode === 'endless') {
-            setTimeout(() => { if (G.state === 'dead') showEndlessGameOver(); }, 800);
-        } else {
-            setTimeout(() => { if (G.state === 'dead') startLevel(G.level); }, 800);
-        }
+        triggerDeath();
         return;
     }
 
@@ -909,7 +1015,13 @@ function checkHit(isTop, isOuter = false) {
         // Break the ice
         hit.isFrosted = false;
         G.activeRainbow = false; // Rainbow is consumed on ice breaking too
-        G.combo++;
+        const now = Date.now();
+        if (G.lastHitTime > 0 && (now - G.lastHitTime) <= COMBO_WINDOW) {
+            G.combo++;
+        } else {
+            G.combo = 1;
+        }
+        G.lastHitTime = now;
         if (G.combo > G.maxCombo) {
             G.maxCombo = G.combo;
             const achD = loadAchData();
@@ -924,7 +1036,7 @@ function checkHit(isTop, isOuter = false) {
         playSoundHit(G.combo);
         G.ringPulse = 1;
 
-        const ma = (hit.start+hit.end)/2 + G.rotation;
+        const ma = (hit.start+hit.end)/2 + rotation;
         emitParticles(G.cx+Math.cos(ma)*radius, G.cy+Math.sin(ma)*radius, '#ffffff', 18);
 
         // Bomb: destroy adjacent segments even if we just hit ice? 
@@ -969,7 +1081,13 @@ function checkHit(isTop, isOuter = false) {
         // ✅ Correct
         hit.alive = false;
         G.activeRainbow = false;
-        G.combo++;
+        const now = Date.now();
+        if (G.lastHitTime > 0 && (now - G.lastHitTime) <= COMBO_WINDOW) {
+            G.combo++;
+        } else {
+            G.combo = 1;
+        }
+        G.lastHitTime = now;
         if (G.combo > G.maxCombo) {
             G.maxCombo = G.combo;
             const achD = loadAchData();
@@ -995,8 +1113,9 @@ function checkHit(isTop, isOuter = false) {
         }
 
         // Change rotation direction on every hit for levels 21-30
-        if (G.level > 20 && G.level <= 30) {
+        if ((G.level > 20 && G.level <= 30) || (G.level > 130 && G.level <= 140)) {
             G.rotationSpeed = -G.rotationSpeed;
+            if (G.hasOuterRing) G.outerRotationSpeed = -G.outerRotationSpeed;
         }
 
         const ma = (hit.start+hit.end)/2 + rotation;
@@ -1095,19 +1214,7 @@ function checkHit(isTop, isOuter = false) {
             return;
         }
 
-        G.combo = 0;
-        playSoundError();
-        G.shakeTimer = 20;
-        G.shakeIntensity = 12;
-        G.loseFlash = 1.0;
-        emitParticles(G.ball.x, G.ball.y, '#FF3B3B', 20);
-        G.state = 'dead';
-
-        if (G.mode === 'endless') {
-            setTimeout(() => { if (G.state === 'dead') showEndlessGameOver(); }, 800);
-        } else {
-            setTimeout(() => { if (G.state === 'dead') startLevel(G.level); }, 800);
-        }
+        triggerDeath();
     }
 }
 
@@ -1174,26 +1281,26 @@ function refreshHUD() {
 // DYNAMIC TRAPS
 // ============================================================
 
-function shiftTraps() {
+function shiftTraps(segments, rotSpeed) {
     let traps = [];
-    for (let i=0; i<G.segments.length; i++) {
-        if (G.segments[i].isTrap) traps.push(i);
+    for (let i=0; i<segments.length; i++) {
+        if (segments[i].isTrap) traps.push(i);
     }
     
     for (let i of traps) {
-        G.segments[i].isTrap = false;
-        G.segments[i].color = G.segments[i].originalColor;
+        segments[i].isTrap = false;
+        segments[i].color = segments[i].originalColor;
     }
     
-    let dir = G.rotationSpeed > 0 ? 1 : -1;
-    let nS = G.segments.length;
+    let dir = rotSpeed > 0 ? 1 : -1;
+    let nS = segments.length;
     let newTraps = [];
     
     for (let i of traps) {
         let nextIdx = i;
         for (let offset = 1; offset <= nS; offset++) {
             let idx = (i + dir * offset + nS * nS) % nS;
-            if (G.segments[idx].alive && !newTraps.includes(idx)) {
+            if (segments[idx].alive && !newTraps.includes(idx)) {
                 nextIdx = idx;
                 break;
             }
@@ -1202,8 +1309,8 @@ function shiftTraps() {
     }
     
     for (let idx of newTraps) {
-        G.segments[idx].isTrap = true;
-        G.segments[idx].color = '#1a1a24';
+        segments[idx].isTrap = true;
+        segments[idx].color = '#1a1a24';
     }
 }
 
@@ -1219,23 +1326,31 @@ function update() {
 
     if (G.state === 'playing') {
         let speedMult = 1;
-        if (G.level > 40 && G.level <= 50) {
+        if ((G.level > 40 && G.level <= 50) || (G.level > 190 && G.level <= 200)) {
             // Sine wave speed multiplier: goes from 0.15 to 1.85 smoothly
             speedMult = 1 + 0.85 * Math.sin(Date.now() * 0.0025);
         }
         
-        if (G.level > 70 && G.level <= 80) {
+        if ((G.level > 70 && G.level <= 80) || (G.level > 150 && G.level <= 160)) {
+            // Tick-tock stepped rotation
             G.continuousRotation = (G.continuousRotation || G.rotation) + G.rotationSpeed;
             const newRot = Math.round(G.continuousRotation / (Math.PI/12)) * (Math.PI/12);
             if (newRot !== G.rotation) {
                 G.rotation = newRot;
                 playSoundTick();
             }
+            if (G.hasOuterRing) {
+                G.continuousOuterRotation = (G.continuousOuterRotation || G.outerRotation) + G.outerRotationSpeed;
+                const newOuterRot = Math.round(G.continuousOuterRotation / (Math.PI/12)) * (Math.PI/12);
+                if (newOuterRot !== G.outerRotation) {
+                    G.outerRotation = newOuterRot;
+                }
+            }
         } else {
             G.rotation += G.rotationSpeed * speedMult;
-        if (G.hasOuterRing) {
-            G.outerRotation += G.outerRotationSpeed * speedMult;
-        }
+            if (G.hasOuterRing) {
+                G.outerRotation += G.outerRotationSpeed * speedMult;
+            }
         }
     }
     if (G.ringPulse>0) G.ringPulse*=0.9;
@@ -1243,16 +1358,22 @@ function update() {
     if (G.loseFlash>0) G.loseFlash -= 0.025;
     
     // Dynamic Traps for 51-60
-    if (G.state === 'playing' && G.level > 50 && G.level <= 60) {
+    if (G.state === 'playing') {
         if (!G.trapShiftLastChange) G.trapShiftLastChange = Date.now();
         if (Date.now() - G.trapShiftLastChange > 1500) {
-            G.trapShiftLastChange = Date.now();
-            shiftTraps();
+            if ((G.level > 50 && G.level <= 60) || (G.level > 120 && G.level <= 130) || (G.level > 170 && G.level <= 180)) {
+                G.trapShiftLastChange = Date.now();
+                shiftTraps(G.segments, G.rotationSpeed);
+            }
+            if (G.level > 140 && G.level <= 150) {
+                G.trapShiftLastChange = Date.now();
+                shiftTraps(G.outerSegments, G.outerRotationSpeed);
+            }
         }
     }
 
     // Color Roulette for 61-70
-    if (G.state === 'playing' && G.level > 60 && G.level <= 70 && G.ball && !G.isShooting) {
+    if (G.state === 'playing' && ((G.level > 60 && G.level <= 70) || (G.level > 170 && G.level <= 180)) && G.ball && !G.isShooting) {
         if (!G.colorLastChange) G.colorLastChange = Date.now();
         if (Date.now() - G.colorLastChange > 3000) {
             G.colorLastChange = Date.now();
@@ -1299,13 +1420,13 @@ function update() {
             if (!G.ball.passedBottom || !G.ball.passedTop) {
                 // Completely missed the ring or flew through an empty ring without hitting the top
                 G.ball.vy = 0;
-                G.combo = 0;
-                G.shakeTimer = 20;
-                G.shakeIntensity = 12;
-                G.loseFlash = 1.0;
-                G.state = 'dead';
-                setTimeout(() => { if (G.state === 'dead') startLevel(G.level); }, 800);
+                triggerDeath();
             } else {
+                // Ball passed through — consume active powerups
+                if (G.activeRainbow || G.activeBomb) {
+                    G.activeRainbow = false;
+                    G.activeBomb = false;
+                }
                 spawnBall();
             }
         }
@@ -1431,10 +1552,17 @@ function drawRing() {
     const cx=G.cx || cfg.centerX, cy=G.cy || cfg.centerY, r=cfg.ringRadius, rw=cfg.ringWidth;
 
     let blinkAlpha = 1;
-    if (G.level > 30 && G.level <= 40 && G.state === 'playing') {
+    let outerBlinkAlpha = 1;
+    if (G.state === 'playing') {
         const cycle = Date.now() % 3000;
-        // Visible for 1.8s, faded for 1.2s
-        blinkAlpha = cycle < 1800 ? 1 : 0.04;
+        const alpha = cycle < 1800 ? 1 : 0.04;
+        if ((G.level > 30 && G.level <= 40) || (G.level > 180 && G.level <= 190)) {
+            blinkAlpha = alpha;
+            outerBlinkAlpha = alpha;
+        }
+        if (G.level > 120 && G.level <= 130) {
+            outerBlinkAlpha = alpha;
+        }
     }
 
     // glow
@@ -1446,7 +1574,7 @@ function drawRing() {
     ctx.fillStyle='#4ECDC4'; ctx.fill();
     ctx.restore();
 
-    function drawSegments(segments, rotation, r) {
+    function drawSegments(segments, rotation, r, curBlinkAlpha) {
         for (const seg of segments) {
             if (!seg.alive) continue;
             const sa=seg.start+rotation, ea=seg.end+rotation;
@@ -1456,7 +1584,7 @@ function drawRing() {
             ctx.closePath();
             if (seg.isFrosted) {
                 ctx.fillStyle = '#D4F1F9'; // Icy blue/white
-                ctx.globalAlpha = blinkAlpha;
+                ctx.globalAlpha = curBlinkAlpha;
                 ctx.fill();
                 ctx.save();
                 ctx.strokeStyle = '#FFFFFF';
@@ -1472,7 +1600,7 @@ function drawRing() {
                 ctx.restore();
             } else {
                 ctx.fillStyle=seg.color; 
-                ctx.globalAlpha = blinkAlpha;
+                ctx.globalAlpha = curBlinkAlpha;
                 ctx.fill();
             }
 
@@ -1480,7 +1608,7 @@ function drawRing() {
                 ctx.save();
                 ctx.strokeStyle = '#FF3B3B';
                 ctx.lineWidth = 2;
-                ctx.globalAlpha = blinkAlpha * 0.8;
+                ctx.globalAlpha = curBlinkAlpha * 0.8;
                 const midAngle = (sa + ea)/2;
                 const trapX = cx + Math.cos(midAngle) * r;
                 const trapY = cy + Math.sin(midAngle) * r;
@@ -1496,7 +1624,7 @@ function drawRing() {
                 ctx.strokeStyle = '#ADB5BD'; // Silver shield color
                 ctx.lineWidth = 4;
                 ctx.lineCap = 'round';
-                ctx.globalAlpha = blinkAlpha;
+                ctx.globalAlpha = curBlinkAlpha;
                 ctx.beginPath();
                 let pad = (ea - sa) * 0.1;
                 ctx.arc(cx, cy, r + rw/2 + 5, sa + pad, ea - pad);
@@ -1517,7 +1645,7 @@ function drawRing() {
             }
 
             ctx.save(); 
-            ctx.globalAlpha = 0.15 * blinkAlpha; 
+            ctx.globalAlpha = 0.15 * curBlinkAlpha; 
             ctx.shadowColor = seg.isFrosted ? '#FFFFFF' : seg.color; 
             ctx.shadowBlur = 12;
             ctx.beginPath(); 
@@ -1530,8 +1658,8 @@ function drawRing() {
         }
     }
 
-    drawSegments(G.segments, G.rotation, r);
-    if (G.hasOuterRing) drawSegments(G.outerSegments, G.outerRotation, r + rw*1.5 + 30);
+    drawSegments(G.segments, G.rotation, r, blinkAlpha);
+    if (G.hasOuterRing) drawSegments(G.outerSegments, G.outerRotation, r + rw*1.5 + 30, outerBlinkAlpha);
 
     ctx.beginPath(); ctx.arc(cx,cy,r-rw/2-2,0,Math.PI*2);
     const isLight = document.body.classList.contains('light-mode');
@@ -1539,10 +1667,20 @@ function drawRing() {
     ctx.globalAlpha = blinkAlpha; ctx.fill();
 
     const rem = G.segments.filter(s=>s.alive && !s.isTrap).length + (G.hasOuterRing ? G.outerSegments.filter(s=>s.alive && !s.isTrap).length : 0);
-    ctx.fillStyle = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)';
-    ctx.globalAlpha = blinkAlpha;
+    const helperP = cachedHelpers;
+    if (helperP.colorIndicator && G.ball) {
+        const ballC = G.activeRainbow ? `hsl(${Date.now()%360}, 100%, 60%)` : G.ball.color;
+        ctx.fillStyle = ballC;
+        ctx.globalAlpha = blinkAlpha * 0.6;
+        ctx.shadowColor = ballC;
+        ctx.shadowBlur = 15;
+    } else {
+        ctx.fillStyle = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.08)';
+        ctx.globalAlpha = blinkAlpha;
+    }
     ctx.font=`${r*0.5}px Inter`; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(rem,cx,cy);
+    ctx.shadowBlur = 0;
     ctx.globalAlpha = 1; // restore
 }
 
@@ -1636,10 +1774,17 @@ function drawBall() {
 
     // aim line
     if (!G.isShooting) {
+        const helperCfg = cachedHelpers;
         ctx.save(); ctx.setLineDash([4,8]);
         ctx.beginPath(); ctx.moveTo(b.x,b.y-br-4);
-        ctx.lineTo(cfg.centerX, cfg.centerY + cfg.ringRadius + cfg.ringWidth);
-        ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1.5; ctx.stroke();
+        if (helperCfg.extendedAim) {
+            // Extended aim: line goes from ball through center to the far side of the ring
+            ctx.lineTo(cfg.centerX, cfg.centerY - cfg.ringRadius - cfg.ringWidth - (G.hasOuterRing ? cfg.ringWidth*1.5 + 50 : 20));
+            ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1.5; ctx.stroke();
+        } else {
+            ctx.lineTo(cfg.centerX, cfg.centerY + cfg.ringRadius + cfg.ringWidth);
+            ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1.5; ctx.stroke();
+        }
         ctx.restore();
 
         // 61-70 Countdown timer
@@ -1853,7 +1998,7 @@ document.getElementById('btn-pu-rainbow').addEventListener('pointerdown', (e) =>
     e.stopPropagation();
     if (G.state !== 'playing' || G.isShooting) return;
     const p = loadProgress();
-    if (p.inventory.rainbow > 0 && !G.activeRainbow) {
+    if (p.inventory.rainbow > 0 && !G.activeRainbow && !G.activeBomb) {
         p.inventory.rainbow--;
         saveProgress(p);
         G.activeRainbow = true;
@@ -1875,10 +2020,34 @@ document.getElementById('btn-pu-bomb').addEventListener('pointerdown', (e) => {
     e.stopPropagation();
     if (G.state !== 'playing' || G.isShooting) return;
     const p = loadProgress();
-    if (p.inventory.bomb > 0 && !G.activeBomb) {
+    if (p.inventory.bomb > 0 && !G.activeBomb && !G.activeRainbow) {
         p.inventory.bomb--;
         saveProgress(p);
         G.activeBomb = true;
+        refreshHUD();
+    }
+});
+
+document.getElementById('btn-second-chance').addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    if (G.secondChanceSnapshot) {
+        G.segments = JSON.parse(JSON.stringify(G.secondChanceSnapshot.segments));
+        G.outerSegments = JSON.parse(JSON.stringify(G.secondChanceSnapshot.outerSegments));
+        G.rotation = G.secondChanceSnapshot.rotation;
+        G.outerRotation = G.secondChanceSnapshot.outerRotation;
+        G.rotationSpeed = G.secondChanceSnapshot.rotationSpeed;
+        G.outerRotationSpeed = G.secondChanceSnapshot.outerRotationSpeed;
+        G.score = G.secondChanceSnapshot.score;
+        G.shotsFired = G.secondChanceSnapshot.shotsFired;
+        G.hasOuterRing = G.secondChanceSnapshot.hasOuterRing;
+        G.ballQueue = [...G.secondChanceSnapshot.ballQueue];
+        G.totalSegments = G.secondChanceSnapshot.totalSegments;
+        
+        G.secondChanceSnapshot = null;
+        document.getElementById('btn-second-chance').style.display = 'none';
+        if (G.secondChanceInterval) clearInterval(G.secondChanceInterval);
+        
+        spawnBall();
         refreshHUD();
     }
 });
@@ -1958,6 +2127,31 @@ function startLevel(lvl) {
     $hud.classList.remove('hud-hidden');
     generateLevel(lvl);
     refreshHUD();
+
+    // SHOW SECOND CHANCE BUTTON IF AVAILABLE
+    const scBtn = document.getElementById('btn-second-chance');
+    if (scBtn) {
+        if (G.secondChanceSnapshot && G.secondChanceSnapshot.level === lvl) {
+            scBtn.style.display = 'block';
+            let timeLeft = 5;
+            document.getElementById('second-chance-timer').textContent = timeLeft;
+            
+            if (G.secondChanceInterval) clearInterval(G.secondChanceInterval);
+            G.secondChanceInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    clearInterval(G.secondChanceInterval);
+                    scBtn.style.display = 'none';
+                    G.secondChanceSnapshot = null;
+                } else {
+                    document.getElementById('second-chance-timer').textContent = timeLeft;
+                }
+            }, 1000);
+        } else {
+            scBtn.style.display = 'none';
+            if (G.secondChanceInterval) clearInterval(G.secondChanceInterval);
+        }
+    }
 }
 
 const ENDLESS_HISCORE_KEY = 'coloraa_endless_hiscore';
@@ -2336,6 +2530,9 @@ if (initialProgress.equippedShape && SHAPES[initialProgress.equippedShape]) {
 }
 if (initialProgress.equippedBackground && BACKGROUNDS[initialProgress.equippedBackground]) {
     CURRENT_BG = initialProgress.equippedBackground;
+}
+if (initialProgress.helpers) {
+    cachedHelpers = { ...initialProgress.helpers };
 }
 showHome();
 gameLoop();
