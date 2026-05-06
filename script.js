@@ -2551,10 +2551,9 @@ function drawWheel(angle) {
         wCtx.moveTo(cx, cy);
         wCtx.arc(cx, cy, r, startAngle, endAngle);
         wCtx.closePath();
-        wCtx.fillStyle = COLORS[i % COLORS.length] || '#4ECDC4';
-        wCtx.globalAlpha = 0.35;
+        const vibrantColors = ['#FF2A54', '#00D166', '#00D4FF', '#FFC800', '#FF2AFF', '#9D00FF', '#00F0B5', '#FF7B00'];
+        wCtx.fillStyle = vibrantColors[i % vibrantColors.length];
         wCtx.fill();
-        wCtx.globalAlpha = 1;
         
         // Border
         wCtx.strokeStyle = 'rgba(255,255,255,0.15)';
