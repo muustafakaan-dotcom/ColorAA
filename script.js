@@ -784,21 +784,27 @@ function seededShuffle(arr, rng) {
 
 // Returns { numColors, numSegments, speed } for each level
 function getLevelConfig(lvl) {
+    let colors, segs, speed;
     if (lvl <= 10) {
         // Tutorial / easy levels
-        const colors = Math.min(lvl, 3);        // 1→1, 2→2, 3→3, 4-10→3
-        const segs   = 4 + lvl;                  // 5..14 (was 7..16)
-        const speed  = 0.010 + (lvl - 1) * 0.001; // starts faster, ramps gently
-        return { numColors: colors, numSegments: segs, speed };
+        colors = Math.min(lvl, 3);
+        segs = 4 + lvl;
     } else {
-        // Normal levels 11-80
-        let t = (lvl - 1) % 10 + 1; // 1..10 ramp for each 10-level block
-        const overall_t = lvl > 20 ? 10 : (lvl - 10); // cap colors and segments at level 20's difficulty for 21-80
-        const colors = Math.min(3 + Math.floor(overall_t / 3), COLORS.length); // 3→6
-        const segs   = 14 + overall_t * 2;               // capped at 24
-        const speed  = Math.min(0.012 + (t - 1) * 0.003, 0.023);  // cap at 0.023
-        return { numColors: colors, numSegments: Math.min(segs, 24), speed };
+        // Normal levels
+        const overall_t = lvl > 20 ? 10 : (lvl - 10); // cap colors and segments at level 20's difficulty
+        colors = Math.min(3 + Math.floor(overall_t / 3), COLORS.length);
+        segs = 14 + overall_t * 2;
     }
+    
+    if (lvl <= 14) {
+        // Oyuncuların sıkılmaması için 1-14 arası hızlandırıldı. (0.016 ile başlayıp 0.024'e doğru kademeli artar)
+        speed = 0.016 + (lvl - 1) * 0.0006;
+    } else {
+        let t = (lvl - 1) % 10 + 1; // 1..10 ramp for each 10-level block
+        speed = Math.min(0.012 + (t - 1) * 0.003, 0.023); // cap at 0.023
+    }
+    
+    return { numColors: colors, numSegments: Math.min(segs, 24), speed };
 }
 
 // ============================================================
