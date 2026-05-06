@@ -274,6 +274,39 @@ body.light-mode .screen {
     font-variant-numeric: tabular-nums;
 }
 
+/* ===== HOME TIPS ===== */
+.home-tip-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    max-width: 320px;
+    animation: fadeIn 0.5s ease;
+}
+
+body.light-mode .home-tip-container {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+.tip-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 8px rgba(255, 230, 109, 0.5));
+}
+
+.tip-text {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-dim);
+    text-align: left;
+    font-weight: 500;
+}
+
 .home-actions {
     display: flex;
     flex-direction: column;

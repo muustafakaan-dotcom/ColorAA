@@ -12,7 +12,7 @@ forestImage.src = 'forest.png';
 const PALETTES = {
     default: { id: 'default', name: 'Ana Palet', cost: 0, colors: ['#FF6B6B','#4ECDC4','#FFE66D','#7C5CFC','#F5E6CC','#6BCB77'] },
     neon: { id: 'neon', name: 'Neon Geceler', cost: 0, colors: ['#FF007F','#00FFFF','#39FF14','#FFD700','#FF6F00','#BF00FF'] },
-    pastel: { id: 'pastel', name: 'Pastel Rüyası', cost: 0, colors: ['#FFB3BA','#FFDFBA','#FFFFBA','#BAFFC9','#BAE1FF','#E8BAFF'] },
+    pastel: { id: 'pastel', name: 'Pastel Rüyası', cost: 0, colors: ['#FFA2C8','#7EEAFF','#FFFB6E','#FFC166','#8CFFA4','#8D91CC'] },
     contrast: { id: 'contrast', name: 'Yüksek Kontrast', cost: 0, colors: ['#FF2A2A','#2A2AFF','#FFEA00','#00E676','#D500F9','#FF6D00'] }
 };
 const SHAPES = {
@@ -69,6 +69,19 @@ const POWERUPS = {
     shield: { id: 'shield', name: 'Kalkan', cost: 0, icon: '🛡️' },
     bomb: { id: 'bomb', name: 'Bomba', cost: 0, icon: '💣' }
 };
+const TIPS = [
+    "Taktik: Hızlı ateş etmek yerine ritmi yakalamaya çalışın. Sabır en iyi silahtır.",
+    "Taktik: 'Kalkan' güçlendiricisi, yanlış renge atış yaptığınızda bir can kurtarır.",
+    "Taktik: Kombo sayacınız arttıkça puanınız katlanarak yükselir. Peş peşe isabet ettirin!",
+    "Taktik: 'Gökkuşağı' topu her renge uyar. Acil durumlarda kullanmaktan çekinmeyin.",
+    "Taktik: İleriki seviyelerde çemberin dönüş hızı dalgalanır. Atış yapmadan önce hızı gözlemleyin.",
+    "Taktik: 'Bomba' güçlendiricisi sadece vurduğunuz yeri değil, etrafındaki renkleri de patlatır.",
+    "Taktik: Buzlu blokları kırmak için önce bir kez vurmanız gerekir, renk fark etmez.",
+    "Taktik: Dış çember ve iç çember ters yönlerde dönüyorsa, boşlukları iyi hizalayın.",
+    "Taktik: Günlük ödül çarkını çevirerek bedava güçlendiriciler kazanabilirsiniz.",
+    "Taktik: 'Uzun Nişangah' yardımcısını mağazadan alarak atışlarınızı çok daha kolay hizalayabilirsiniz.",
+    "Taktik: Önden vuramadığınız kalkanlı renkleri yok etmek için, yanındaki rengi bombayla patlatmayı deneyin!"
+];
 let COLORS = PALETTES.default.colors;
 let CURRENT_SHAPE = 'default';
 let CURRENT_BG = 'default';
@@ -90,11 +103,11 @@ let G = {
     loseFlash:0, shotsFired:0, totalSegments:0,
     activeRainbow: false, activeShield: false, shieldsUsedThisLevel: 0,
     activeBomb: false,
-    endlessScore: 0, endlessHits: 0, endlessHiScore: 0, endlessColors: 3
+    endlessScore: 0, endlessHits: 0, endlessHiScore: 0, endlessColors: 3, endlessRound: 0
 };
 
 let dpr=1, W=0, H=0;
-let cachedHelpers = { colorIndicator: false, extendedAim: false };
+let cachedHelpers = { colorIndicator: false, extendedAim: false, queueDots: false };
 
 // ── DOM ──
 const $level   = document.getElementById('hud-level');
@@ -282,9 +295,10 @@ function loadProgress() {
             if(!d.inventory) d.inventory={ rainbow: 0, shield: 0, bomb: 0 };
             if(d.inventory.bomb === undefined) d.inventory.bomb = 0;
             if(d.starsSpent === undefined) d.starsSpent=0;
-            if(!d.helpers) d.helpers = { colorIndicator: false, extendedAim: false };
+            if(!d.helpers) d.helpers = { colorIndicator: false, extendedAim: false, queueDots: false };
             if(d.helpers.colorIndicator === undefined) d.helpers.colorIndicator = false;
             if(d.helpers.extendedAim === undefined) d.helpers.extendedAim = false;
+            if(d.helpers.queueDots === undefined) d.helpers.queueDots = false;
             return d; 
         } 
     } catch(e){}
@@ -380,6 +394,13 @@ function getTotalStars() {
     return total - (p.starsSpent || 0);
 }
 
+function updateTip() {
+    const tipEl = document.getElementById('home-tip-text');
+    if (tipEl) {
+        tipEl.textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
+    }
+}
+
 function showHome() {
     G.state = 'home';
     showScreen('home');
@@ -388,6 +409,7 @@ function showHome() {
         totalStarsEl.textContent = getTotalStars();
     }
     updateDailyButton();
+    updateTip();
 }
 
 function showLevels() {
@@ -521,37 +543,6 @@ function renderStore() {
         list.appendChild(card);
     });
 
-    // ── YARDIMCILAR (Helpers) ──
-    const helpersHeader = document.createElement('h3');
-    helpersHeader.className = 'store-section-title';
-    helpersHeader.textContent = 'YARDIMCILAR';
-    helpersHeader.style.marginTop = '24px';
-    list.appendChild(helpersHeader);
-
-    const HELPERS = [
-        { id: 'colorIndicator', name: 'Renk Göstergesi', icon: '🎯', desc: 'Ortadaki sayı topun renginde görünür' },
-        { id: 'extendedAim', name: 'Uzun Nişangah', icon: '📏', desc: 'Nişan çizgisi çemberin karşısına kadar uzar' }
-    ];
-
-    HELPERS.forEach(helper => {
-        const isActive = p.helpers[helper.id];
-        const card = document.createElement('div');
-        card.className = 'palette-card';
-        card.innerHTML = `
-            <div class="palette-header" style="flex-direction:column; align-items:flex-start; gap:4px;">
-                <div style="display:flex; align-items:center; gap:8px; width:100%;">
-                    <span style="font-size:20px;">${helper.icon}</span>
-                    <span class="palette-name" style="flex:1;">${helper.name}</span>
-                    <label class="toggle-switch" style="margin:0;">
-                        <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleHelper('${helper.id}', this.checked)">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-                <span style="font-size:11px; color:var(--text-dim); padding-left:28px;">${helper.desc}</span>
-            </div>
-        `;
-        list.appendChild(card);
-    });
 }
 
 function showPowerups() {
@@ -582,6 +573,39 @@ function renderPowerups() {
                 <span style="font-size:12px; color:var(--text-dim); margin-left:auto;">Envanter: ${p.inventory[pu.id]}</span>
             </div>
             ${btnHtml}
+        `;
+        list.appendChild(card);
+    });
+
+    // ── YARDIMCILAR (Helpers) ──
+    const helpersHeader = document.createElement('h3');
+    helpersHeader.className = 'store-section-title';
+    helpersHeader.textContent = 'YARDIMCILAR';
+    helpersHeader.style.marginTop = '24px';
+    list.appendChild(helpersHeader);
+
+    const HELPERS = [
+        { id: 'colorIndicator', name: 'Renk Göstergesi', icon: '🎯', desc: 'Ortadaki sayı topun renginde görünür' },
+        { id: 'extendedAim', name: 'Uzun Nişangah', icon: '📏', desc: 'Nişan çizgisi çemberin karşısına kadar uzar' },
+        { id: 'queueDots', name: 'Gelecek Toplar', icon: '🔮', desc: 'Sıradaki 3 topu ortada küçük noktalarla gösterir' }
+    ];
+
+    HELPERS.forEach(helper => {
+        const isActive = p.helpers[helper.id];
+        const card = document.createElement('div');
+        card.className = 'palette-card';
+        card.innerHTML = `
+            <div class="palette-header" style="flex-direction:column; align-items:flex-start; gap:4px;">
+                <div style="display:flex; align-items:center; gap:8px; width:100%;">
+                    <span style="font-size:20px;">${helper.icon}</span>
+                    <span class="palette-name" style="flex:1;">${helper.name}</span>
+                    <label class="toggle-switch" style="margin:0;">
+                        <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleHelper('${helper.id}', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <span style="font-size:11px; color:var(--text-dim); padding-left:28px;">${helper.desc}</span>
+            </div>
         `;
         list.appendChild(card);
     });
@@ -1015,6 +1039,11 @@ function checkHit(isTop, isOuter = false) {
         // Break the ice
         hit.isFrosted = false;
         G.activeRainbow = false; // Rainbow is consumed on ice breaking too
+        if (!isTop) {
+            const achD = loadAchData();
+            achD.backHitsTotal = (achD.backHitsTotal || 0) + 1;
+            saveAchData(achD);
+        }
         const now = Date.now();
         if (G.lastHitTime > 0 && (now - G.lastHitTime) <= COMBO_WINDOW) {
             G.combo++;
@@ -1081,6 +1110,11 @@ function checkHit(isTop, isOuter = false) {
         // ✅ Correct
         hit.alive = false;
         G.activeRainbow = false;
+        if (!isTop) {
+            const achD = loadAchData();
+            achD.backHitsTotal = (achD.backHitsTotal || 0) + 1;
+            saveAchData(achD);
+        }
         const now = Date.now();
         if (G.lastHitTime > 0 && (now - G.lastHitTime) <= COMBO_WINDOW) {
             G.combo++;
@@ -1149,16 +1183,17 @@ function checkHit(isTop, isOuter = false) {
                 // Endless: refill ring with more segments
                 G.endlessHits += G.segments.filter(s=>!s.isTrap).length;
                 G.endlessScore += G.segments.filter(s=>!s.isTrap).length * Math.max(1, G.combo);
+                G.endlessRound++;
                 
                 // Increase difficulty
                 const absSpeed = Math.abs(G.rotationSpeed);
-                const newSpeed = Math.min(absSpeed * 1.1, 0.035);
+                const newSpeed = Math.min(absSpeed * 1.08, 0.035);
                 G.rotationSpeed = G.rotationSpeed > 0 ? newSpeed : -newSpeed;
                 
-                // Add more colors every 25 hits
-                if (G.endlessHits >= G.endlessColors * 25 - 50 && G.endlessColors < COLORS.length) {
-                    G.endlessColors++;
-                }
+                // Add more colors gradually
+                if (G.endlessRound >= 3 && G.endlessColors < 4) G.endlessColors = 4;
+                if (G.endlessRound >= 6 && G.endlessColors < 5) G.endlessColors = 5;
+                if (G.endlessRound >= 10 && G.endlessColors < COLORS.length) G.endlessColors = COLORS.length;
                 
                 generateEndlessRing();
                 playSoundLevelUp();
@@ -1326,12 +1361,12 @@ function update() {
 
     if (G.state === 'playing') {
         let speedMult = 1;
-        if ((G.level > 40 && G.level <= 50) || (G.level > 190 && G.level <= 200)) {
+        if ((G.level > 40 && G.level <= 50) || (G.level > 150 && G.level <= 160) || (G.level > 190 && G.level <= 200) || (G.mode === 'endless' && G.endlessRound >= 9)) {
             // Sine wave speed multiplier: goes from 0.15 to 1.85 smoothly
             speedMult = 1 + 0.85 * Math.sin(Date.now() * 0.0025);
         }
         
-        if ((G.level > 70 && G.level <= 80) || (G.level > 150 && G.level <= 160)) {
+        if ((G.level > 70 && G.level <= 80)) {
             // Tick-tock stepped rotation
             G.continuousRotation = (G.continuousRotation || G.rotation) + G.rotationSpeed;
             const newRot = Math.round(G.continuousRotation / (Math.PI/12)) * (Math.PI/12);
@@ -1682,6 +1717,32 @@ function drawRing() {
     ctx.fillText(rem,cx,cy);
     ctx.shadowBlur = 0;
     ctx.globalAlpha = 1; // restore
+
+    if (helperP.queueDots && G.ballQueue && G.ballQueue.length > 0 && (G.state === 'playing' || G.state === 'dead' || G.state === 'levelup')) {
+        ctx.save();
+        const dotR = 4;
+        const spacing = 12;
+        const numDots = Math.min(3, G.ballQueue.length);
+        const totalW = (numDots - 1) * spacing;
+        let startX = cx - totalW / 2;
+        const startY = cy + r * 0.35; // just below the center number
+        
+        ctx.globalAlpha = blinkAlpha;
+        for (let i = 0; i < numDots; i++) {
+            ctx.beginPath();
+            ctx.arc(startX + i * spacing, startY, dotR, 0, Math.PI * 2);
+            ctx.fillStyle = G.ballQueue[i];
+            ctx.shadowColor = G.ballQueue[i];
+            ctx.shadowBlur = 4;
+            ctx.fill();
+            
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
 }
 
 
@@ -1779,8 +1840,16 @@ function drawBall() {
         ctx.beginPath(); ctx.moveTo(b.x,b.y-br-4);
         if (helperCfg.extendedAim) {
             // Extended aim: line goes from ball through center to the far side of the ring
-            ctx.lineTo(cfg.centerX, cfg.centerY - cfg.ringRadius - cfg.ringWidth - (G.hasOuterRing ? cfg.ringWidth*1.5 + 50 : 20));
+            // Sadece yazının üzerinde görünmemesi için yazı boyutuna göre bir boşluk (nefes alma payı)
+            const textGap = cfg.ringRadius * 0.30;
+            
+            ctx.lineTo(cfg.centerX, cfg.centerY + textGap);
             ctx.strokeStyle='rgba(255,255,255,0.1)'; ctx.lineWidth=1.5; ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(cfg.centerX, cfg.centerY - textGap);
+            ctx.lineTo(cfg.centerX, cfg.centerY - cfg.ringRadius - cfg.ringWidth - (G.hasOuterRing ? cfg.ringWidth*1.5 + 50 : 20));
+            ctx.stroke();
         } else {
             ctx.lineTo(cfg.centerX, cfg.centerY + cfg.ringRadius + cfg.ringWidth);
             ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1.5; ctx.stroke();
@@ -2002,6 +2071,9 @@ document.getElementById('btn-pu-rainbow').addEventListener('pointerdown', (e) =>
         p.inventory.rainbow--;
         saveProgress(p);
         G.activeRainbow = true;
+        const achD = loadAchData();
+        achD.rainbowUsedTotal = (achD.rainbowUsedTotal || 0) + 1;
+        saveAchData(achD);
         refreshHUD();
     }
 });
@@ -2013,6 +2085,9 @@ document.getElementById('btn-pu-shield').addEventListener('pointerdown', (e) => 
         p.inventory.shield--;
         saveProgress(p);
         G.activeShield = true;
+        const achD = loadAchData();
+        achD.shieldUsedTotal = (achD.shieldUsedTotal || 0) + 1;
+        saveAchData(achD);
         refreshHUD();
     }
 });
@@ -2024,6 +2099,9 @@ document.getElementById('btn-pu-bomb').addEventListener('pointerdown', (e) => {
         p.inventory.bomb--;
         saveProgress(p);
         G.activeBomb = true;
+        const achD = loadAchData();
+        achD.bombUsedTotal = (achD.bombUsedTotal || 0) + 1;
+        saveAchData(achD);
         refreshHUD();
     }
 });
@@ -2159,9 +2237,10 @@ const ENDLESS_HISCORE_KEY = 'coloraa_endless_hiscore';
 function startEndless() {
     G.state='playing'; G.mode='endless'; G.maxCombo=0; G.combo=0;
     G.ballQueue=[]; G.particles=[]; G.loseFlash=0; G.shakeTimer=0; G.shakeIntensity=0;
-    G.endlessScore=0; G.endlessHits=0; G.endlessColors=3;
+    G.endlessScore=0; G.endlessHits=0; G.endlessColors=3; G.endlessRound=0;
     G.activeRainbow=false; G.activeShield=false; G.shieldsUsedThisLevel=0; G.activeBomb=false;
     G.rotationSpeed = 0.008;
+    G.hasOuterRing=false; G.outerSegments=[]; G.outerRotation=0; G.outerRotationSpeed=0;
     
     const hi = localStorage.getItem(ENDLESS_HISCORE_KEY);
     G.endlessHiScore = hi ? parseInt(hi) : 0;
@@ -2175,8 +2254,12 @@ function startEndless() {
 function generateEndlessRing() {
     G.segments = []; G.rotation = 0; G.isShooting = false;
     G.ringPulse = 0;
+    G.hasOuterRing = false; G.outerSegments = []; G.outerRotation = 0; G.outerRotationSpeed = 0;
     
-    const nS = 8 + Math.min(Math.floor(G.endlessHits / 20), 8); // 8 to 16 segments
+    const round = G.endlessRound;
+    
+    // Segment count: starts at 8, gradually increases
+    const nS = Math.min(8 + Math.floor(round * 0.8), 18);
     const pal = COLORS.slice(0, G.endlessColors);
     const sa = (Math.PI * 2) / nS;
     
@@ -2191,6 +2274,40 @@ function generateEndlessRing() {
     
     // Alternate rotation direction
     if (Math.random() > 0.5) G.rotationSpeed = -G.rotationSpeed;
+    
+    // ── Round 4+: Traps ──
+    if (round >= 4) {
+        let numTraps = Math.max(1, Math.floor(nS * 0.1));
+        let trapIndices = [];
+        for (let i = 0; i < nS; i++) trapIndices.push(i);
+        shuffle(trapIndices);
+        for (let i = 0; i < numTraps; i++) {
+            G.segments[trapIndices[i]].isTrap = true;
+            G.segments[trapIndices[i]].color = '#1a1a24';
+        }
+    }
+    
+    // ── Round 7+: Frosted segments ──
+    if (round >= 7 && round % 3 === 1) {
+        for (let i = 0; i < nS; i++) G.segments[i].isFrosted = true;
+    }
+    
+    // ── Round 8+: Shielded segments ──
+    if (round >= 8 && round % 3 === 2) {
+        let targetShieldCount = Math.floor(nS * 0.3);
+        let shieldCount = 0;
+        let indices = [];
+        for (let i = 0; i < nS; i++) indices.push(i);
+        shuffle(indices);
+        for (let idx of indices) {
+            let oppositeIdx = (idx + Math.floor(nS / 2)) % nS;
+            if (!G.segments[oppositeIdx].isShielded) {
+                G.segments[idx].isShielded = true;
+                shieldCount++;
+                if (shieldCount >= targetShieldCount) break;
+            }
+        }
+    }
     
     // Reset ball queue with correct colors
     G.ballQueue = [];
@@ -2240,11 +2357,33 @@ const ACHIEVEMENTS = [
     { id:'lvl50',         icon:'🎖️', name:'50. Bölüm',          desc:'50. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(50); } },
     { id:'lvl60',         icon:'🎖️', name:'60. Bölüm',          desc:'60. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(60); } },
     { id:'lvl70',         icon:'🎖️', name:'70. Bölüm',          desc:'70. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(70); } },
-    { id:'lvl80',         icon:'🥇', name:'80. Bölüm',          desc:'80. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(80); } }
+    { id:'lvl80',         icon:'🥇', name:'80. Bölüm',          desc:'80. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(80); } },
+    { id:'rainbow50',     icon:'🌈', name:'Renkli Başlangıç',   desc:'Gökkuşağı topunu 50 kez kullan',      reward:15, check: () => { const a=loadAchData(); return (a.rainbowUsedTotal||0) >= 50; } },
+    { id:'rainbow100',    icon:'🌈', name:'Renk Ustası',        desc:'Gökkuşağı topunu 100 kez kullan',     reward:25, check: () => { const a=loadAchData(); return (a.rainbowUsedTotal||0) >= 100; } },
+    { id:'rainbow200',    icon:'🌈', name:'Gökkuşağı Savaşçısı',desc:'Gökkuşağı topunu 200 kez kullan',     reward:50, check: () => { const a=loadAchData(); return (a.rainbowUsedTotal||0) >= 200; } },
+    { id:'shield50',      icon:'🛡️', name:'Savunma Temeli',     desc:'Kalkanı 50 kez kullan',               reward:15, check: () => { const a=loadAchData(); return (a.shieldUsedTotal||0) >= 50; } },
+    { id:'shield100',     icon:'🛡️', name:'Kalkan Uzmanı',      desc:'Kalkanı 100 kez kullan',              reward:25, check: () => { const a=loadAchData(); return (a.shieldUsedTotal||0) >= 100; } },
+    { id:'shield200',     icon:'🛡️', name:'Aşılmaz Duvar',      desc:'Kalkanı 200 kez kullan',              reward:50, check: () => { const a=loadAchData(); return (a.shieldUsedTotal||0) >= 200; } },
+    { id:'bomb50',        icon:'💣', name:'Patlayıcı Başlangıç',desc:'Bombayı 50 kez kullan',               reward:15, check: () => { const a=loadAchData(); return (a.bombUsedTotal||0) >= 50; } },
+    { id:'bomb100',       icon:'💣', name:'Yıkım Uzmanı',       desc:'Bombayı 100 kez kullan',              reward:25, check: () => { const a=loadAchData(); return (a.bombUsedTotal||0) >= 100; } },
+    { id:'bomb200',       icon:'💣', name:'Kıyamet Getiren',    desc:'Bombayı 200 kez kullan',              reward:50, check: () => { const a=loadAchData(); return (a.bombUsedTotal||0) >= 200; } },
+    { id:'backhit50',     icon:'🔄', name:'Ters Köşe',          desc:'Hedefi arkadan 50 kez patlat',        reward:15, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 50; } },
+    { id:'backhit100',    icon:'🔄', name:'Gizli Vuruş',        desc:'Hedefi arkadan 100 kez patlat',       reward:25, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 100; } },
+    { id:'backhit200',    icon:'🔄', name:'Kusursuz Suikastçi', desc:'Hedefi arkadan 200 kez patlat',       reward:50, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 200; } }
 ];
 
 function loadAchData() {
-    try { return JSON.parse(localStorage.getItem(ACH_KEY)) || { claimed:[], shieldUsed:false, maxComboEver:0 }; } catch(e) { return { claimed:[], shieldUsed:false, maxComboEver:0 }; }
+    try { 
+        let d = JSON.parse(localStorage.getItem(ACH_KEY));
+        if (!d) d = { claimed:[], shieldUsed:false, maxComboEver:0 };
+        if (d.rainbowUsedTotal === undefined) d.rainbowUsedTotal = 0;
+        if (d.shieldUsedTotal === undefined) d.shieldUsedTotal = 0;
+        if (d.bombUsedTotal === undefined) d.bombUsedTotal = 0;
+        if (d.backHitsTotal === undefined) d.backHitsTotal = 0;
+        return d;
+    } catch(e) { 
+        return { claimed:[], shieldUsed:false, maxComboEver:0, rainbowUsedTotal:0, shieldUsedTotal:0, bombUsedTotal:0, backHitsTotal:0 }; 
+    }
 }
 function saveAchData(d) { localStorage.setItem(ACH_KEY, JSON.stringify(d)); }
 
