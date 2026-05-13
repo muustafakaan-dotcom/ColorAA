@@ -69,19 +69,242 @@ const POWERUPS = {
     shield: { id: 'shield', name: 'Kalkan', cost: 0, icon: '🛡️' },
     bomb: { id: 'bomb', name: 'Bomba', cost: 0, icon: '💣' }
 };
-const TIPS = [
-    "Taktik: Hızlı ateş etmek yerine ritmi yakalamaya çalışın. Sabır en iyi silahtır.",
-    "Taktik: 'Kalkan' güçlendiricisi, yanlış renge atış yaptığınızda bir can kurtarır.",
-    "Taktik: Kombo sayacınız arttıkça puanınız katlanarak yükselir. Peş peşe isabet ettirin!",
-    "Taktik: 'Gökkuşağı' topu her renge uyar. Acil durumlarda kullanmaktan çekinmeyin.",
-    "Taktik: İleriki seviyelerde çemberin dönüş hızı dalgalanır. Atış yapmadan önce hızı gözlemleyin.",
-    "Taktik: 'Bomba' güçlendiricisi sadece vurduğunuz yeri değil, etrafındaki renkleri de patlatır.",
-    "Taktik: Buzlu blokları kırmak için önce bir kez vurmanız gerekir, renk fark etmez.",
-    "Taktik: Dış çember ve iç çember ters yönlerde dönüyorsa, boşlukları iyi hizalayın.",
-    "Taktik: Günlük ödül çarkını çevirerek bedava güçlendiriciler kazanabilirsiniz.",
-    "Taktik: 'Uzun Nişangah' yardımcısını mağazadan alarak atışlarınızı çok daha kolay hizalayabilirsiniz.",
-    "Taktik: Önden vuramadığınız kalkanlı renkleri yok etmek için, yanındaki rengi bombayla patlatmayı deneyin!"
-];
+// ============================================================
+// LANGUAGE / i18n
+// ============================================================
+const LANG_KEY = 'coloraa_lang';
+let currentLang = localStorage.getItem(LANG_KEY) || 'tr';
+
+const STRINGS = {
+    tr: {
+        subtitle: 'Renkleri eşleştir, daireyi temizle',
+        play: 'OYNA',
+        endlessMode: '♾ SONSUZ MOD',
+        dailyReward: '🎰 GÜNLÜK ÖDÜL',
+        levels: 'BÖLÜMLER',
+        store: 'MAĞAZA',
+        powerups: 'GÜÇLENDİRİCİLER',
+        achievements: 'BAŞARIMLAR',
+        settings: 'AYARLAR',
+        hudLabel: 'BÖLÜM',
+        hudLabelScore: 'SKOR',
+        levelComplete: 'BÖLÜM {n} TAMAM!',
+        nextLevel: 'SONRAKİ BÖLÜM →',
+        homeMenu: 'ANA MENÜ',
+        gameOver: 'OYUN BİTTİ',
+        retry: 'TEKRAR OYNA',
+        score: 'SKOR',
+        highScore: 'EN YÜKSEK',
+        combo: 'KOMBO',
+        settingsTitle: 'AYARLAR',
+        lightMode: 'Açık Tema (Light Mode)',
+        bgMusic: 'Arka Plan Müziği',
+        sfx: 'Ses Efektleri',
+        close: 'KAPAT',
+        spin: 'ÇEVİR!',
+        collectReward: 'ÖDÜLÜ AL',
+        dailyTitle: 'GÜNLÜK ÖDÜL',
+        achievementsTitle: 'Başarımlar',
+        storeTitle: 'Mağaza',
+        powerupsTitle: 'Güçlendiriciler',
+        levelsTitle: 'Bölümler',
+        secondChance: 'BİR ŞANS DAHA',
+        colorThemes: 'RENK TEMALARI',
+        ballShapes: 'TOP ŞEKİLLERİ',
+        backgrounds: 'ARKA PLANLAR',
+        helpers: 'YARDIMCILAR',
+        using: 'KULLANILIYOR',
+        use: 'KULLAN',
+        buyWith: '★ İLE AÇ',
+        getWith: '★ İLE AL',
+        inventory: 'Envanter',
+        tipLoading: 'Taktik yükleniyor...',
+        languageBtn: '🌐 DİL',
+        rewardSuccess: (n) => `🎉 ${n} Yıldız kazandın!`,
+        rewardPowerup: (n, name) => `🎉 ${n} ${name} kazandın!`,
+        achievementSuccess: 'Başarım kazanıldı! ★',
+        claimBtn: (r) => `${r} ★ AL`,
+        unlockBtn: (c) => `${c} ★ İLE AÇ`,
+        tips: [
+            "Taktik: Hızlı ateş etmek yerine ritmi yakalamaya çalışın. Sabır en iyi silahtır.",
+            "Taktik: 'Kalkan' güçlendiricisi, yanlış renge atış yaptığınızda bir can kurtarır.",
+            "Taktik: Kombo sayacınız arttıkça puanınız katlanarak yükselir. Peş peşe isabet ettirin!",
+            "Taktik: 'Gökkuşağı' topu her renge uyar. Acil durumlarda kullanmaktan çekinmeyin.",
+            "Taktik: İleriki seviyelerde çemberin dönüş hızı dalgalanır. Atış yapmadan önce hızı gözlemleyin.",
+            "Taktik: 'Bomba' güçlendiricisi sadece vurduğunuz yeri değil, etrafındaki renkleri de patlatır.",
+            "Taktik: Buzlu blokları kırmak için önce bir kez vurmanız gerekir, renk fark etmez.",
+            "Taktik: Dış çember ve iç çember ters yönlerde dönüyorsa, boşlukları iyi hizalayın.",
+            "Taktik: Günlük ödül çarkını çevirerek bedava güçlendiriciler kazanabilirsiniz.",
+            "Taktik: 'Uzun Nişangah' yardımcısını mağazadan alarak atışlarınızı çok daha kolay hizalayabilirsiniz.",
+            "Taktik: Önden vuramadığınız kalkanlı renkleri yok etmek için, yanındaki rengi bombayla patlatmayı deneyin!"
+        ]
+    },
+    en: {
+        subtitle: 'Match colors, clear the ring',
+        play: 'PLAY',
+        endlessMode: '♾ ENDLESS MODE',
+        dailyReward: '🎰 DAILY REWARD',
+        levels: 'LEVELS',
+        store: 'STORE',
+        powerups: 'POWER-UPS',
+        achievements: 'ACHIEVEMENTS',
+        settings: 'SETTINGS',
+        hudLabel: 'LEVEL',
+        hudLabelScore: 'SCORE',
+        levelComplete: 'LEVEL {n} CLEAR!',
+        nextLevel: 'NEXT LEVEL →',
+        homeMenu: 'MAIN MENU',
+        gameOver: 'GAME OVER',
+        retry: 'RETRY',
+        score: 'SCORE',
+        highScore: 'BEST',
+        combo: 'COMBO',
+        settingsTitle: 'SETTINGS',
+        lightMode: 'Light Mode',
+        bgMusic: 'Background Music',
+        sfx: 'Sound Effects',
+        close: 'CLOSE',
+        spin: 'SPIN!',
+        collectReward: 'COLLECT REWARD',
+        dailyTitle: 'DAILY REWARD',
+        achievementsTitle: 'Achievements',
+        storeTitle: 'Store',
+        powerupsTitle: 'Power-Ups',
+        levelsTitle: 'Levels',
+        secondChance: 'SECOND CHANCE',
+        colorThemes: 'COLOR THEMES',
+        ballShapes: 'BALL SHAPES',
+        backgrounds: 'BACKGROUNDS',
+        helpers: 'HELPERS',
+        using: 'EQUIPPED',
+        use: 'USE',
+        buyWith: '★ UNLOCK',
+        getWith: '★ GET',
+        inventory: 'Inventory',
+        tipLoading: 'Loading tip...',
+        languageBtn: '🌐 LANGUAGE',
+        rewardSuccess: (n) => `🎉 You won ${n} Stars!`,
+        rewardPowerup: (n, name) => `🎉 You won ${n} ${name}!`,
+        achievementSuccess: 'Achievement unlocked! ★',
+        claimBtn: (r) => `CLAIM ${r} ★`,
+        unlockBtn: (c) => `UNLOCK ${c} ★`,
+        tips: [
+            "Tip: Try to find the rhythm instead of shooting fast. Patience is your best weapon.",
+            "Tip: The 'Shield' power-up saves you from a wrong-color hit.",
+            "Tip: Your combo multiplier grows with consecutive hits. Keep the streak going!",
+            "Tip: The 'Rainbow' ball matches any color. Don't hesitate to use it in emergencies.",
+            "Tip: In later levels the ring speed fluctuates. Observe the speed before shooting.",
+            "Tip: The 'Bomb' power-up destroys not just the target but adjacent segments too.",
+            "Tip: Hit frozen blocks once to break the ice — color doesn't matter.",
+            "Tip: If the inner and outer rings spin in opposite directions, time the gaps carefully.",
+            "Tip: Spin the daily reward wheel to earn free power-ups.",
+            "Tip: Buy the 'Extended Aim' helper from the store to align your shots much more easily.",
+            "Tip: Can't hit a shielded segment from the front? Try bombing an adjacent one!"
+        ]
+    }
+};
+
+function t(key) { return (STRINGS[currentLang] || STRINGS.tr)[key]; }
+
+function applyLanguage() {
+    const S = STRINGS[currentLang] || STRINGS.tr;
+    const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    const setQ = (q, text) => { document.querySelectorAll(q).forEach(el => el.textContent = text); };
+
+    set('game-subtitle', S.subtitle);
+    set('btn-play', S.play);
+    set('btn-endless', S.endlessMode);
+    set('btn-levels', S.levels);
+    set('btn-store', S.store);
+    set('btn-powerups', S.powerups);
+    set('btn-achievements', S.achievements);
+    set('btn-settings', S.settings);
+    set('btn-language', S.languageBtn);
+    set('btn-nextlevel', S.nextLevel);
+    set('btn-go-home-2', S.homeMenu);
+    set('btn-endless-retry', S.retry);
+    set('btn-endless-home', S.homeMenu);
+    set('btn-close-settings', S.close);
+    set('btn-spin', S.spin);
+    set('btn-wheel-close', S.collectReward);
+
+    // Headings
+    const levelsHeadings = document.querySelectorAll('.levels-heading');
+    const headingMap = { 'screen-levels': S.levelsTitle, 'screen-store': S.storeTitle, 'screen-powerups': S.powerupsTitle, 'screen-achievements': S.achievementsTitle };
+    document.querySelectorAll('.screen').forEach(screen => {
+        const h = screen.querySelector('.levels-heading');
+        if (h && headingMap[screen.id]) h.textContent = headingMap[screen.id];
+    });
+
+    const gameOverEl = document.querySelector('#screen-gameover .screen-heading');
+    if (gameOverEl) gameOverEl.textContent = S.gameOver;
+    const settingsTitleEl = document.querySelector('#screen-settings .screen-heading');
+    if (settingsTitleEl) settingsTitleEl.textContent = S.settingsTitle;
+    const dailyTitleEl = document.querySelector('#screen-wheel .screen-heading');
+    if (dailyTitleEl) dailyTitleEl.textContent = S.dailyTitle;
+
+    // Setting labels
+    const settingLabels = document.querySelectorAll('.setting-label');
+    if (settingLabels[0]) settingLabels[0].textContent = S.lightMode;
+    if (settingLabels[1]) settingLabels[1].textContent = S.bgMusic;
+    if (settingLabels[2]) settingLabels[2].textContent = S.sfx;
+
+    // Game over stats
+    const statLabels = document.querySelectorAll('.gameover-label');
+    if (statLabels[0]) statLabels[0].textContent = S.score;
+    if (statLabels[1]) statLabels[1].textContent = S.highScore;
+    if (statLabels[2]) statLabels[2].textContent = S.combo;
+
+    // HUD label
+    const hudLabel = document.querySelector('#hud .hud-label');
+    if (hudLabel) hudLabel.textContent = G.mode === 'endless' ? S.hudLabelScore : S.hudLabel;
+
+    // Second chance button
+    const scBtn = document.getElementById('btn-second-chance');
+    if (scBtn) {
+        const timerSpan = document.getElementById('second-chance-timer');
+        const timerVal = timerSpan ? timerSpan.textContent : '5';
+        scBtn.innerHTML = `${S.secondChance} (<span id="second-chance-timer">${timerVal}</span>)`;
+    }
+
+    // Daily button label (preserve countdown span)
+    const dailyBtn = document.getElementById('btn-daily');
+    if (dailyBtn) {
+        const countdown = document.getElementById('daily-countdown');
+        const countdownVal = countdown ? countdown.textContent : '';
+        dailyBtn.innerHTML = `${S.dailyReward} <span id="daily-countdown">${countdownVal}</span>`;
+    }
+}
+
+function setLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem(LANG_KEY, lang);
+    applyLanguage();
+    updateTip();
+    if (G.state === 'store') renderStore();
+    if (G.state === 'powerups') renderPowerups();
+    if (G.state === 'achievements') renderAchievements();
+}
+
+function showLanguagePicker() {
+    // Simple in-place modal
+    let modal = document.getElementById('lang-modal');
+    if (modal) { modal.remove(); return; }
+    modal = document.createElement('div');
+    modal.id = 'lang-modal';
+    modal.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;`;
+    modal.innerHTML = `
+        <div style="background:var(--card);border-radius:20px;padding:32px 28px;display:flex;flex-direction:column;gap:16px;min-width:240px;box-shadow:0 8px 40px rgba(0,0,0,0.5);">
+            <h2 style="text-align:center;margin:0;font-size:20px;letter-spacing:2px;">🌐 DİL / LANGUAGE</h2>
+            <button onclick="setLanguage('tr');document.getElementById('lang-modal').remove();" style="padding:14px;border-radius:12px;border:none;cursor:pointer;font-size:16px;font-weight:700;background:${currentLang==='tr'?'var(--purple)':'var(--bg2)'};color:${currentLang==='tr'?'#fff':'var(--text)'};">🇹🇷 Türkçe</button>
+            <button onclick="setLanguage('en');document.getElementById('lang-modal').remove();" style="padding:14px;border-radius:12px;border:none;cursor:pointer;font-size:16px;font-weight:700;background:${currentLang==='en'?'var(--purple)':'var(--bg2)'};color:${currentLang==='en'?'#fff':'var(--text)'};">🇬🇧 English</button>
+            <button onclick="document.getElementById('lang-modal').remove();" style="padding:10px;border-radius:12px;border:none;cursor:pointer;font-size:14px;background:transparent;color:var(--text-dim);">${currentLang==='tr'?'Kapat':'Close'}</button>
+        </div>`;
+    document.getElementById('game-container').appendChild(modal);
+}
+
+const TIPS = STRINGS.tr.tips; // will be updated dynamically via t()
+
 let COLORS = PALETTES.default.colors;
 let CURRENT_SHAPE = 'default';
 let CURRENT_BG = 'default';
@@ -281,7 +504,7 @@ function saveSettings() {
 }
 
 function loadProgress() {
-    let p = { done:[], hi:{}, stars:{}, unlockedPalettes:['default'], equippedPalette:'default', unlockedShapes:['default'], equippedShape:'default', unlockedBackgrounds:['default'], equippedBackground:'default', starsSpent:0, inventory:{ rainbow: 0, shield: 0, bomb: 0 }, helpers:{ colorIndicator: false, extendedAim: false } };
+    let p = { done:[], hi:{}, stars:{}, comboBonusStars:{}, unlockedPalettes:['default'], equippedPalette:'default', unlockedShapes:['default'], equippedShape:'default', unlockedBackgrounds:['default'], equippedBackground:'default', starsSpent:0, inventory:{ rainbow: 0, shield: 0, bomb: 0 }, helpers:{ colorIndicator: false, extendedAim: false } };
     try { 
         const d = JSON.parse(localStorage.getItem(SKEY)); 
         if(d && d.done) { 
@@ -299,6 +522,7 @@ function loadProgress() {
             if(d.helpers.colorIndicator === undefined) d.helpers.colorIndicator = false;
             if(d.helpers.extendedAim === undefined) d.helpers.extendedAim = false;
             if(d.helpers.queueDots === undefined) d.helpers.queueDots = false;
+            if(!d.comboBonusStars) d.comboBonusStars = {};
             return d; 
         } 
     } catch(e){}
@@ -306,10 +530,11 @@ function loadProgress() {
 }
 function saveProgress(p) { localStorage.setItem(SKEY, JSON.stringify(p)); }
 
-function markDone(lvl, stars) {
+function markDone(lvl, stars, comboBonus) {
     const p = loadProgress();
     if (!p.done.includes(lvl)) p.done.push(lvl);
     p.stars[lvl] = Math.max(p.stars[lvl] || 0, stars);
+    p.comboBonusStars[lvl] = Math.max(p.comboBonusStars[lvl] || 0, comboBonus || 0);
     saveProgress(p);
 }
 
@@ -388,8 +613,12 @@ function showScreen(name) {
 function getTotalStars() {
     const p = loadProgress();
     let total = 0;
+    const STAR_POINTS = { 1: 5, 2: 10, 3: 15 };
     for (const lvl in p.stars) {
-        total += p.stars[lvl] || 0;
+        total += STAR_POINTS[p.stars[lvl]] || 0;
+    }
+    for (const lvl in p.comboBonusStars) {
+        total += p.comboBonusStars[lvl] || 0;
     }
     return total - (p.starsSpent || 0);
 }
@@ -397,13 +626,15 @@ function getTotalStars() {
 function updateTip() {
     const tipEl = document.getElementById('home-tip-text');
     if (tipEl) {
-        tipEl.textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
+        const tips = (STRINGS[currentLang] || STRINGS.tr).tips;
+        tipEl.textContent = tips[Math.floor(Math.random() * tips.length)];
     }
 }
 
 function showHome() {
     G.state = 'home';
     showScreen('home');
+    applyLanguage();
     const totalStarsEl = document.getElementById('total-stars-count');
     if (totalStarsEl) {
         totalStarsEl.textContent = getTotalStars();
@@ -437,7 +668,7 @@ function renderStore() {
     
     const palettesHeader = document.createElement('h3');
     palettesHeader.className = 'store-section-title';
-    palettesHeader.textContent = 'RENK TEMALARI';
+    palettesHeader.textContent = t('colorThemes');
     list.appendChild(palettesHeader);
 
     Object.values(PALETTES).forEach(pal => {
@@ -454,12 +685,12 @@ function renderStore() {
         
         let btnHtml = '';
         if (isEquipped) {
-            btnHtml = `<button class="btn-equipped" disabled>KULLANILIYOR</button>`;
+            btnHtml = `<button class="btn-equipped" disabled>${t('using')}</button>`;
         } else if (isUnlocked) {
-            btnHtml = `<button class="btn-equip" onclick="equipPalette('${pal.id}')">KULLAN</button>`;
+            btnHtml = `<button class="btn-equip" onclick="equipPalette('${pal.id}')">${t('use')}</button>`;
         } else {
             const canAfford = availableStars >= pal.cost;
-            btnHtml = `<button class="btn-buy" ${canAfford ? '' : 'disabled'} onclick="buyPalette('${pal.id}')">${pal.cost} ★ İLE AÇ</button>`;
+            btnHtml = `<button class="btn-buy" ${canAfford ? '' : 'disabled'} onclick="buyPalette('${pal.id}')">${pal.cost} ${t('buyWith')}</button>`;
         }
         
         card.innerHTML = `
@@ -474,7 +705,7 @@ function renderStore() {
 
     const shapesHeader = document.createElement('h3');
     shapesHeader.className = 'store-section-title';
-    shapesHeader.textContent = 'TOP ŞEKİLLERİ';
+    shapesHeader.textContent = t('ballShapes');
     shapesHeader.style.marginTop = '24px';
     list.appendChild(shapesHeader);
 
@@ -514,7 +745,7 @@ function renderStore() {
 
     const bgHeader = document.createElement('h3');
     bgHeader.className = 'store-section-title';
-    bgHeader.textContent = 'ARKA PLANLAR';
+    bgHeader.textContent = t('backgrounds');
     bgHeader.style.marginTop = '24px';
     list.appendChild(bgHeader);
 
@@ -526,12 +757,12 @@ function renderStore() {
         
         let btnHtml = '';
         if (isEquipped) {
-            btnHtml = `<button class="btn-equipped" disabled>KULLANILIYOR</button>`;
+            btnHtml = `<button class="btn-equipped" disabled>${t('using')}</button>`;
         } else if (isUnlocked) {
-            btnHtml = `<button class="btn-equip" onclick="equipBackground('${bg.id}')">KULLAN</button>`;
+            btnHtml = `<button class="btn-equip" onclick="equipBackground('${bg.id}')">${t('use')}</button>`;
         } else {
             const canAfford = availableStars >= bg.cost;
-            btnHtml = `<button class="btn-buy" ${canAfford ? '' : 'disabled'} onclick="buyBackground('${bg.id}')">${bg.cost} ★ İLE AÇ</button>`;
+            btnHtml = `<button class="btn-buy" ${canAfford ? '' : 'disabled'} onclick="buyBackground('${bg.id}')">${bg.cost} ${t('buyWith')}</button>`;
         }
                      
         card.innerHTML = `
@@ -565,12 +796,12 @@ function renderPowerups() {
         card.className = 'palette-card';
         
         const canAfford = availableStars >= pu.cost;
-        const btnHtml = `<button class="btn-buy" ${canAfford ? '' : 'disabled'} onclick="buyPowerup('${pu.id}')">${pu.cost} ★ İLE AL</button>`;
+        const btnHtml = `<button class="btn-buy" ${canAfford ? '' : 'disabled'} onclick="buyPowerup('${pu.id}')">${pu.cost} ${t('getWith')}</button>`;
                      
         card.innerHTML = `
             <div class="palette-header">
                 <span class="palette-name"><span style="color:var(--teal);margin-right:8px">${pu.icon}</span>${pu.name}</span>
-                <span style="font-size:12px; color:var(--text-dim); margin-left:auto;">Envanter: ${p.inventory[pu.id]}</span>
+                <span style="font-size:12px; color:var(--text-dim); margin-left:auto;">${t('inventory')}: ${p.inventory[pu.id]}</span>
             </div>
             ${btnHtml}
         `;
@@ -580,11 +811,15 @@ function renderPowerups() {
     // ── YARDIMCILAR (Helpers) ──
     const helpersHeader = document.createElement('h3');
     helpersHeader.className = 'store-section-title';
-    helpersHeader.textContent = 'YARDIMCILAR';
+    helpersHeader.textContent = t('helpers');
     helpersHeader.style.marginTop = '24px';
     list.appendChild(helpersHeader);
 
-    const HELPERS = [
+    const HELPERS = currentLang === 'en' ? [
+        { id: 'colorIndicator', name: 'Color Indicator', icon: '🎯', desc: 'The center number appears in the ball color' },
+        { id: 'extendedAim', name: 'Extended Aim', icon: '📏', desc: 'Aim line extends to the opposite side of the ring' },
+        { id: 'queueDots', name: 'Ball Queue', icon: '🔮', desc: 'Shows the next 3 balls as small dots in the center' }
+    ] : [
         { id: 'colorIndicator', name: 'Renk Göstergesi', icon: '🎯', desc: 'Ortadaki sayı topun renginde görünür' },
         { id: 'extendedAim', name: 'Uzun Nişangah', icon: '📏', desc: 'Nişan çizgisi çemberin karşısına kadar uzar' },
         { id: 'queueDots', name: 'Gelecek Toplar', icon: '🔮', desc: 'Sıradaki 3 topu ortada küçük noktalarla gösterir' }
@@ -817,6 +1052,7 @@ function generateLevel(lvl) {
     G.shotsFired=0; G.lastHitTime=0;
     G.activeRainbow=false; G.activeShield=false; G.shieldsUsedThisLevel=0;
     G.activeBomb=false;
+    G.usedSecondChanceThisLevel = false;
     G.hasOuterRing=false; G.outerSegments=[]; G.outerRotation=0; G.outerRotationSpeed=0;
 
     const rng = seededRng(lvl * 7919);  // deterministic seed per level
@@ -970,7 +1206,8 @@ function triggerDeath() {
     if (G.ball) emitParticles(G.ball.x, G.ball.y, '#FF3B3B', 20);
 
     const rem = G.segments.filter(s=>s.alive && !s.isTrap).length + (G.hasOuterRing ? G.outerSegments.filter(s=>s.alive && !s.isTrap).length : 0);
-    if (rem > 0 && rem < 5 && G.mode === 'campaign') {
+    const totalTarget = G.segments.filter(s=>!s.isTrap).length + (G.hasOuterRing ? G.outerSegments.filter(s=>!s.isTrap).length : 0);
+    if (rem > 0 && rem <= totalTarget / 3 && G.mode === 'campaign') {
         G.secondChanceSnapshot = {
             level: G.level,
             segments: JSON.parse(JSON.stringify(G.segments)),
@@ -1074,11 +1311,10 @@ function checkHit(isTop, isOuter = false) {
         const ma = (hit.start+hit.end)/2 + rotation;
         emitParticles(G.cx+Math.cos(ma)*radius, G.cy+Math.sin(ma)*radius, '#ffffff', 18);
 
-        // Bomb: destroy adjacent segments even if we just hit ice? 
-        // Let's say bomb breaks the segment completely, not just the ice.
+        // Bomb: destroy adjacent segments
         if (G.activeBomb) {
             G.activeBomb = false;
-            hit.alive = false; // bomb destroys the segment completely
+            // The hit segment's ice is already broken, it shouldn't die.
             const hitIdx = segments.indexOf(hit);
             const nS = segments.length;
             for (let offset = -1; offset <= 1; offset++) {
@@ -1086,9 +1322,18 @@ function checkHit(isTop, isOuter = false) {
                 const adjIdx = (hitIdx + offset + nS) % nS;
                 const adj = segments[adjIdx];
                 if (adj.alive && !adj.isTrap) {
-                    adj.alive = false;
-                    const adjMa = (adj.start+adj.end)/2 + rotation;
-                    emitParticles(G.cx+Math.cos(adjMa)*radius, G.cy+Math.sin(adjMa)*radius, adj.color, 18);
+                    if (adj.isFrosted) {
+                        adj.isFrosted = false;
+                        const adjMa = (adj.start+adj.end)/2 + rotation;
+                        emitParticles(G.cx+Math.cos(adjMa)*radius, G.cy+Math.sin(adjMa)*radius, '#ffffff', 18);
+                    } else {
+                        adj.alive = false;
+                        const achD = loadAchData();
+                        achD.colorsDestroyedTotal = (achD.colorsDestroyedTotal || 0) + 1;
+                        saveAchData(achD);
+                        const adjMa = (adj.start+adj.end)/2 + rotation;
+                        emitParticles(G.cx+Math.cos(adjMa)*radius, G.cy+Math.sin(adjMa)*radius, adj.color, 18);
+                    }
                 }
             }
             G.shakeTimer = 15;
@@ -1115,6 +1360,9 @@ function checkHit(isTop, isOuter = false) {
     if (hit.color === G.ball.color || G.activeRainbow) {
         // ✅ Correct
         hit.alive = false;
+        const achD = loadAchData();
+        achD.colorsDestroyedTotal = (achD.colorsDestroyedTotal || 0) + 1;
+        saveAchData(achD);
         G.activeRainbow = false;
         if (!isTop) {
             const achD = loadAchData();
@@ -1171,9 +1419,18 @@ function checkHit(isTop, isOuter = false) {
                 const adjIdx = (hitIdx + offset + nS) % nS;
                 const adj = segments[adjIdx];
                 if (adj.alive && !adj.isTrap) {
-                    adj.alive = false;
-                    const adjMa = (adj.start+adj.end)/2 + rotation;
-                    emitParticles(G.cx+Math.cos(adjMa)*radius, G.cy+Math.sin(adjMa)*radius, adj.color, 18);
+                    if (adj.isFrosted) {
+                        adj.isFrosted = false;
+                        const adjMa = (adj.start+adj.end)/2 + rotation;
+                        emitParticles(G.cx+Math.cos(adjMa)*radius, G.cy+Math.sin(adjMa)*radius, '#ffffff', 18);
+                    } else {
+                        adj.alive = false;
+                        const achD = loadAchData();
+                        achD.colorsDestroyedTotal = (achD.colorsDestroyedTotal || 0) + 1;
+                        saveAchData(achD);
+                        const adjMa = (adj.start+adj.end)/2 + rotation;
+                        emitParticles(G.cx+Math.cos(adjMa)*radius, G.cy+Math.sin(adjMa)*radius, adj.color, 18);
+                    }
                 }
             }
             G.shakeTimer = 15;
@@ -1211,10 +1468,18 @@ function checkHit(isTop, isOuter = false) {
             playSoundLevelUp();
             
             let stars = 1;
-            if (G.shotsFired <= G.totalSegments) stars = 3;
-            else if (G.shotsFired <= G.totalSegments + 3) stars = 2;
+            if (G.usedSecondChanceThisLevel) {
+                stars = 1;
+            } else {
+                if (G.shotsFired <= G.totalSegments) stars = 3;
+                else if (G.shotsFired <= G.totalSegments + 3) stars = 2;
+            }
             
-            markDone(G.level, stars);
+            const comboBonus = G.maxCombo;
+            const STAR_POINTS = { 1: 5, 2: 10, 3: 15 };
+            const starPoints = STAR_POINTS[stars] || 0;
+            
+            markDone(G.level, stars, comboBonus);
             document.getElementById('completed-level').textContent = G.level;
             
             const starsContainer = document.getElementById('level-stars');
@@ -1230,6 +1495,28 @@ function checkHit(isTop, isOuter = false) {
                     setTimeout(() => playSoundStar(i), (i-1) * 150 + 300);
                 }
             }
+            
+            // Show reward breakdown
+            let rewardEl = document.getElementById('level-reward-summary');
+            if (!rewardEl) {
+                rewardEl = document.createElement('div');
+                rewardEl.id = 'level-reward-summary';
+                rewardEl.style.cssText = 'margin-top:12px; display:flex; flex-direction:column; align-items:center; gap:6px; font-size:15px; font-weight:600; color:var(--text-dim);';
+                starsContainer.parentNode.insertBefore(rewardEl, starsContainer.nextSibling);
+            }
+            rewardEl.innerHTML = `
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="color:var(--yellow);">★</span>
+                    <span>Başarı: <span style="color:var(--yellow);">${starPoints}</span></span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="color:var(--coral);">🔥</span>
+                    <span>Kombo Bonusu (x${comboBonus}): <span style="color:var(--yellow);">${comboBonus}</span></span>
+                </div>
+                <div style="margin-top:4px; font-size:17px; color:var(--text); font-weight:800;">
+                    Toplam: <span style="color:var(--yellow);">${starPoints + comboBonus} ★</span>
+                </div>
+            `;
 
             document.getElementById('btn-nextlevel').style.display = G.level>=TOTAL_LEVELS ? 'none' : '';
             showScreen('levelup');
@@ -1305,7 +1592,7 @@ function refreshHUD() {
     if (btnShield) {
         if (G.activeShield) btnShield.classList.add('active-pu');
         else btnShield.classList.remove('active-pu');
-        btnShield.disabled = (p.inventory.shield <= 0 && !G.activeShield) || G.shieldsUsedThisLevel >= 2;
+        btnShield.disabled = (p.inventory.shield <= 0 && !G.activeShield) || G.shieldsUsedThisLevel >= 3;
     }
 
     const countBomb = document.getElementById('pu-count-bomb');
@@ -2087,7 +2374,7 @@ document.getElementById('btn-pu-shield').addEventListener('pointerdown', (e) => 
     e.stopPropagation();
     if (G.state !== 'playing') return;
     const p = loadProgress();
-    if (p.inventory.shield > 0 && !G.activeShield && G.shieldsUsedThisLevel < 2) {
+    if (p.inventory.shield > 0 && !G.activeShield && G.shieldsUsedThisLevel < 3) {
         p.inventory.shield--;
         saveProgress(p);
         G.activeShield = true;
@@ -2126,6 +2413,7 @@ document.getElementById('btn-second-chance').addEventListener('pointerdown', (e)
         G.hasOuterRing = G.secondChanceSnapshot.hasOuterRing;
         G.ballQueue = [...G.secondChanceSnapshot.ballQueue];
         G.totalSegments = G.secondChanceSnapshot.totalSegments;
+        G.usedSecondChanceThisLevel = true;
         
         G.secondChanceSnapshot = null;
         document.getElementById('btn-second-chance').style.display = 'none';
@@ -2198,6 +2486,12 @@ document.getElementById('btn-achievements').addEventListener('click', (e)=>{
 document.getElementById('btn-back-achievements').addEventListener('click', (e)=>{
     e.stopPropagation();
     showHome();
+});
+
+// Home → Language Picker
+document.getElementById('btn-language').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    showLanguagePicker();
 });
 
 // ============================================================
@@ -2375,7 +2669,11 @@ const ACHIEVEMENTS = [
     { id:'bomb200',       icon:'💣', name:'Kıyamet Getiren',    desc:'Bombayı 200 kez kullan',              reward:50, check: () => { const a=loadAchData(); return (a.bombUsedTotal||0) >= 200; } },
     { id:'backhit50',     icon:'🔄', name:'Ters Köşe',          desc:'Hedefi arkadan 50 kez patlat',        reward:15, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 50; } },
     { id:'backhit100',    icon:'🔄', name:'Gizli Vuruş',        desc:'Hedefi arkadan 100 kez patlat',       reward:25, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 100; } },
-    { id:'backhit200',    icon:'🔄', name:'Kusursuz Suikastçi', desc:'Hedefi arkadan 200 kez patlat',       reward:50, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 200; } }
+    { id:'backhit200',    icon:'🔄', name:'Kusursuz Suikastçi', desc:'Hedefi arkadan 200 kez patlat',       reward:50, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 200; } },
+    { id:'pop1000',       icon:'💥', name:'Patlatıcı',          desc:'Toplam 1000 renk patlat',             reward:20, check: () => { const a=loadAchData(); return (a.colorsDestroyedTotal||0) >= 1000; } },
+    { id:'pop3000',       icon:'💥', name:'Büyük Yıkım',        desc:'Toplam 3000 renk patlat',             reward:40, check: () => { const a=loadAchData(); return (a.colorsDestroyedTotal||0) >= 3000; } },
+    { id:'pop5000',       icon:'💥', name:'Renk Katili',        desc:'Toplam 5000 renk patlat',             reward:60, check: () => { const a=loadAchData(); return (a.colorsDestroyedTotal||0) >= 5000; } },
+    { id:'pop10000',      icon:'💥', name:'Yok Edici',          desc:'Toplam 10000 renk patlat',            reward:100, check: () => { const a=loadAchData(); return (a.colorsDestroyedTotal||0) >= 10000; } }
 ];
 
 function loadAchData() {
@@ -2386,9 +2684,10 @@ function loadAchData() {
         if (d.shieldUsedTotal === undefined) d.shieldUsedTotal = 0;
         if (d.bombUsedTotal === undefined) d.bombUsedTotal = 0;
         if (d.backHitsTotal === undefined) d.backHitsTotal = 0;
+        if (d.colorsDestroyedTotal === undefined) d.colorsDestroyedTotal = 0;
         return d;
     } catch(e) { 
-        return { claimed:[], shieldUsed:false, maxComboEver:0, rainbowUsedTotal:0, shieldUsedTotal:0, bombUsedTotal:0, backHitsTotal:0 }; 
+        return { claimed:[], shieldUsed:false, maxComboEver:0, rainbowUsedTotal:0, shieldUsedTotal:0, bombUsedTotal:0, backHitsTotal:0, colorsDestroyedTotal:0 }; 
     }
 }
 function saveAchData(d) { localStorage.setItem(ACH_KEY, JSON.stringify(d)); }
@@ -2633,10 +2932,10 @@ function spinWheel() {
             // Show result
             const resultEl = document.getElementById('wheel-result');
             if (prize.type === 'star') {
-                resultEl.textContent = `🎉 ${prize.amount} Yıldız kazandın!`;
+                resultEl.textContent = t('rewardSuccess')(prize.amount);
             } else {
                 const puName = POWERUPS[prize.id].name;
-                resultEl.textContent = `🎉 ${prize.amount} ${puName} kazandın!`;
+                resultEl.textContent = t('rewardPowerup')(prize.amount, puName);
             }
             resultEl.classList.remove('hidden');
             document.getElementById('btn-wheel-close').classList.remove('hidden');

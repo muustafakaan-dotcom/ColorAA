@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ColorAA — Renk Eşleştirme Oyunu</title>
+    <title>Hue Hit — Renk Eşleştirme Oyunu</title>
     <meta name="description" content="Dönen dairedeki renk şeritlerine doğru renkteki topları fırlat ve daireyi temizle!">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -37,8 +37,8 @@
         <div id="screen-home" class="screen">
             <div class="screen-content">
                 <div class="home-top">
-                    <h1 id="game-title">Color<span>AA</span></h1>
-                    <p class="subtitle">Renkleri eşleştir, daireyi temizle</p>
+                    <h1 id="game-title">Hue<span>Hit</span></h1>
+                    <p class="subtitle" id="game-subtitle">Renkleri eşleştir, daireyi temizle</p>
                     <div id="total-stars-display" class="total-stars-display">
                         <span class="star-icon">★</span>
                         <span id="total-stars-count">0</span>
@@ -51,8 +51,9 @@
                     <button id="btn-levels" class="btn-ghost">BÖLÜMLER</button>
                     <button id="btn-store" class="btn-ghost" style="margin-top: -12px;">MAĞAZA</button>
                     <button id="btn-powerups" class="btn-ghost" style="margin-top: -12px;">GÜÇLENDİRİCİLER</button>
-                    <button id="btn-achievements" class="btn-ghost" style="margin-top: -12px;">BAŞARIMLAR</button>
-                    <button id="btn-settings" class="btn-ghost" style="margin-top: -12px;">AYARLAR</button>
+                    <button id="btn-achievements" class="btn-ghost" style="margin-top: -12px;" data-i18n="achievements">BAŞARIMLAR</button>
+                    <button id="btn-language" class="btn-ghost" style="margin-top: -12px;">🌐 DİL</button>
+                    <button id="btn-settings" class="btn-ghost" style="margin-top: -12px;" data-i18n="settings">AYARLAR</button>
                 </div>
                 
                 <div class="home-tip-container" id="home-tip-container">
