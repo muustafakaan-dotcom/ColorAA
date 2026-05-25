@@ -10,64 +10,64 @@ forestImage.src = 'forest.png';
 
 // ── Colors & Palettes ──
 const PALETTES = {
-    default: { id: 'default', name: 'Ana Palet', cost: 0, colors: ['#FF6B6B','#4ECDC4','#FFE66D','#7C5CFC','#F5E6CC','#6BCB77'] },
-    neon: { id: 'neon', name: 'Neon Geceler', cost: 0, colors: ['#FF007F','#00FFFF','#39FF14','#FFD700','#FF6F00','#BF00FF'] },
-    pastel: { id: 'pastel', name: 'Pastel Rüyası', cost: 0, colors: ['#FFA2C8','#7EEAFF','#FFFB6E','#FFC166','#8CFFA4','#8D91CC'] },
-    contrast: { id: 'contrast', name: 'Yüksek Kontrast', cost: 0, colors: ['#FF2A2A','#2A2AFF','#FFEA00','#00E676','#D500F9','#FF6D00'] }
+    default: { id: 'default', name_tr: 'Ana Palet', name_en: 'Default', cost: 0, colors: ['#FF6B6B','#4ECDC4','#FFE66D','#7C5CFC','#F5E6CC','#6BCB77'] },
+    neon: { id: 'neon', name_tr: 'Neon Geceler', name_en: 'Neon Nights', cost: 0, colors: ['#FF007F','#00FFFF','#39FF14','#FFD700','#FF6F00','#BF00FF'] },
+    pastel: { id: 'pastel', name_tr: 'Pastel Rüyası', name_en: 'Pastel Dream', cost: 0, colors: ['#FFA2C8','#7EEAFF','#FFFB6E','#FFC166','#8CFFA4','#8D91CC'] },
+    contrast: { id: 'contrast', name_tr: 'Yüksek Kontrast', name_en: 'High Contrast', cost: 0, colors: ['#FF2A2A','#2A2AFF','#FFEA00','#00E676','#D500F9','#FF6D00'] }
 };
 const SHAPES = {
-    default: { id: 'default', name: 'Daire', cost: 0, icon: '●' },
-    star: { id: 'star', name: 'Yıldız', cost: 0, icon: '★' },
-    hexagon: { id: 'hexagon', name: 'Altıgen', cost: 0, icon: '⬢' },
-    heart: { id: 'heart', name: 'Kalp', cost: 0, icon: '♥' },
-    triangle: { id: 'triangle', name: 'Üçgen', cost: 0, icon: '▲' },
-    snowflake: { id: 'snowflake', name: 'Kar Tanesi', cost: 0, icon: '❄️', isEmoji: true },
-    skull: { id: 'skull', name: 'Kuru Kafa', cost: 0, icon: '💀', isEmoji: true },
-    jet: { id: 'jet', name: 'Jet Uçak', cost: 0, icon: '✈️', isEmoji: true },
-    paw: { id: 'paw', name: 'Pati', cost: 0, icon: '🐾', isEmoji: true },
-    bird: { id: 'bird', name: 'Kuş', cost: 0, icon: '🐦', isEmoji: true },
-    sun: { id: 'sun', name: 'Güneş', cost: 0, icon: '☀️', isEmoji: true },
-    note: { id: 'note', name: 'Nota', cost: 0, icon: '🎵', isEmoji: true },
-    moon: { id: 'moon', name: 'Hilal', cost: 0, icon: '🌙', isEmoji: true },
-    bone: { id: 'bone', name: 'Kemik', cost: 0, icon: '🦴', isEmoji: true },
-    ghost: { id: 'ghost', name: 'Hayalet', cost: 0, icon: '👻', isEmoji: true },
-    butterfly: { id: 'butterfly', name: 'Kelebek', cost: 0, icon: '🦋' },
-    daisy: { id: 'daisy', name: 'Papatya', cost: 0, icon: '🌼', isEmoji: true },
-    cross: { id: 'cross', name: 'X İşareti', cost: 0, icon: '❌', isEmoji: true },
-    fire: { id: 'fire', name: 'Alev', cost: 0, icon: '🔥', isEmoji: true },
-    passenger_plane: { id: 'passenger_plane', name: 'Yolcu Uçağı', cost: 0, icon: '✈️', isEmoji: true, rotation: -45 * Math.PI / 180 },
-    letter: { id: 'letter', name: 'Mektup', cost: 0, icon: '✉️', isEmoji: true },
-    umbrella: { id: 'umbrella', name: 'Şemsiye', cost: 0, icon: '☂️', isEmoji: true },
-    dog: { id: 'dog', name: 'Köpek', cost: 0, icon: '🐶', isEmoji: true },
-    cat: { id: 'cat', name: 'Kedi', cost: 0, icon: '🐱', isEmoji: true },
-    car: { id: 'car', name: 'Araba', cost: 0, icon: '🚗', isEmoji: true },
-    glass: { id: 'glass', name: 'Kadeh', cost: 0, icon: '🍷', isEmoji: true },
-    leaf: { id: 'leaf', name: 'Yaprak', cost: 0, icon: '🍃', isEmoji: true },
-    dollar: { id: 'dollar', name: 'Dolar', cost: 0, icon: '💲', isEmoji: true },
-    euro: { id: 'euro', name: 'Euro', cost: 0, icon: '€', isEmoji: true },
-    ok_hand: { id: 'ok_hand', name: 'Okey', cost: 0, icon: '👍', isEmoji: true },
-    diamond: { id: 'diamond', name: 'Elmas', cost: 0, icon: '💎', isEmoji: true },
-    lightning: { id: 'lightning', name: 'Şimşek', cost: 0, icon: '⚡', isEmoji: true },
-    crown: { id: 'crown', name: 'Taç', cost: 0, icon: '👑', isEmoji: true },
-    rocket: { id: 'rocket', name: 'Roket', cost: 0, icon: '🚀', isEmoji: true, rotation: -45 * Math.PI / 180 },
-    anchor: { id: 'anchor', name: 'Çapa', cost: 0, icon: '⚓', isEmoji: true },
-    clover: { id: 'clover', name: 'Yonca', cost: 0, icon: '🍀', isEmoji: true },
-    invader: { id: 'invader', name: 'Uzaylı', cost: 0, icon: '👾', isEmoji: true },
-    guitar: { id: 'guitar', name: 'Gitar', cost: 0, icon: '🎸', isEmoji: true },
-    trophy: { id: 'trophy', name: 'Kupa', cost: 0, icon: '🏆', isEmoji: true },
-    mushroom: { id: 'mushroom', name: 'Mantar', cost: 0, icon: '🍄', isEmoji: true }
+    default: { id: 'default', name_tr: 'Daire', name_en: 'Circle', cost: 0, icon: '●' },
+    star: { id: 'star', name_tr: 'Yıldız', name_en: 'Star', cost: 0, icon: '★' },
+    hexagon: { id: 'hexagon', name_tr: 'Altıgen', name_en: 'Hexagon', cost: 0, icon: '⬢' },
+    heart: { id: 'heart', name_tr: 'Kalp', name_en: 'Heart', cost: 0, icon: '♥' },
+    triangle: { id: 'triangle', name_tr: 'Üçgen', name_en: 'Triangle', cost: 0, icon: '▲' },
+    snowflake: { id: 'snowflake', name_tr: 'Kar Tanesi', name_en: 'Snowflake', cost: 0, icon: '❄️', isEmoji: true },
+    skull: { id: 'skull', name_tr: 'Kuru Kafa', name_en: 'Skull', cost: 0, icon: '💀', isEmoji: true },
+    jet: { id: 'jet', name_tr: 'Jet Uçak', name_en: 'Jet', cost: 0, icon: '✈️', isEmoji: true },
+    paw: { id: 'paw', name_tr: 'Pati', name_en: 'Paw', cost: 0, icon: '🐾', isEmoji: true },
+    bird: { id: 'bird', name_tr: 'Kuş', name_en: 'Bird', cost: 0, icon: '🐦', isEmoji: true },
+    sun: { id: 'sun', name_tr: 'Güneş', name_en: 'Sun', cost: 0, icon: '☀️', isEmoji: true },
+    note: { id: 'note', name_tr: 'Nota', name_en: 'Note', cost: 0, icon: '🎵', isEmoji: true },
+    moon: { id: 'moon', name_tr: 'Hilal', name_en: 'Moon', cost: 0, icon: '🌙', isEmoji: true },
+    bone: { id: 'bone', name_tr: 'Kemik', name_en: 'Bone', cost: 0, icon: '🦴', isEmoji: true },
+    ghost: { id: 'ghost', name_tr: 'Hayalet', name_en: 'Ghost', cost: 0, icon: '👻', isEmoji: true },
+    butterfly: { id: 'butterfly', name_tr: 'Kelebek', name_en: 'Butterfly', cost: 0, icon: '🦋' },
+    daisy: { id: 'daisy', name_tr: 'Papatya', name_en: 'Daisy', cost: 0, icon: '🌼', isEmoji: true },
+    cross: { id: 'cross', name_tr: 'X İşareti', name_en: 'Cross', cost: 0, icon: '❌', isEmoji: true },
+    fire: { id: 'fire', name_tr: 'Alev', name_en: 'Fire', cost: 0, icon: '🔥', isEmoji: true },
+    passenger_plane: { id: 'passenger_plane', name_tr: 'Yolcu Uçağı', name_en: 'Airplane', cost: 0, icon: '✈️', isEmoji: true, rotation: -45 * Math.PI / 180 },
+    letter: { id: 'letter', name_tr: 'Mektup', name_en: 'Letter', cost: 0, icon: '✉️', isEmoji: true },
+    umbrella: { id: 'umbrella', name_tr: 'Şemsiye', name_en: 'Umbrella', cost: 0, icon: '☂️', isEmoji: true },
+    dog: { id: 'dog', name_tr: 'Köpek', name_en: 'Dog', cost: 0, icon: '🐶', isEmoji: true },
+    cat: { id: 'cat', name_tr: 'Kedi', name_en: 'Cat', cost: 0, icon: '🐱', isEmoji: true },
+    car: { id: 'car', name_tr: 'Araba', name_en: 'Car', cost: 0, icon: '🚗', isEmoji: true },
+    glass: { id: 'glass', name_tr: 'Kadeh', name_en: 'Wine Glass', cost: 0, icon: '🍷', isEmoji: true },
+    leaf: { id: 'leaf', name_tr: 'Yaprak', name_en: 'Leaf', cost: 0, icon: '🍃', isEmoji: true },
+    dollar: { id: 'dollar', name_tr: 'Dolar', name_en: 'Dollar', cost: 0, icon: '💲', isEmoji: true },
+    euro: { id: 'euro', name_tr: 'Euro', name_en: 'Euro', cost: 0, icon: '€', isEmoji: true },
+    ok_hand: { id: 'ok_hand', name_tr: 'Okey', name_en: 'Thumbs Up', cost: 0, icon: '👍', isEmoji: true },
+    diamond: { id: 'diamond', name_tr: 'Elmas', name_en: 'Diamond', cost: 0, icon: '💎', isEmoji: true },
+    lightning: { id: 'lightning', name_tr: 'Şimşek', name_en: 'Lightning', cost: 0, icon: '⚡', isEmoji: true },
+    crown: { id: 'crown', name_tr: 'Taç', name_en: 'Crown', cost: 0, icon: '👑', isEmoji: true },
+    rocket: { id: 'rocket', name_tr: 'Roket', name_en: 'Rocket', cost: 0, icon: '🚀', isEmoji: true, rotation: -45 * Math.PI / 180 },
+    anchor: { id: 'anchor', name_tr: 'Çapa', name_en: 'Anchor', cost: 0, icon: '⚓', isEmoji: true },
+    clover: { id: 'clover', name_tr: 'Yonca', name_en: 'Clover', cost: 0, icon: '🍀', isEmoji: true },
+    invader: { id: 'invader', name_tr: 'Uzaylı', name_en: 'Invader', cost: 0, icon: '👾', isEmoji: true },
+    guitar: { id: 'guitar', name_tr: 'Gitar', name_en: 'Guitar', cost: 0, icon: '🎸', isEmoji: true },
+    trophy: { id: 'trophy', name_tr: 'Kupa', name_en: 'Trophy', cost: 0, icon: '🏆', isEmoji: true },
+    mushroom: { id: 'mushroom', name_tr: 'Mantar', name_en: 'Mushroom', cost: 0, icon: '🍄', isEmoji: true }
 };
 const BACKGROUNDS = {
-    default: { id: 'default', name: 'Standart', cost: 0, icon: '⬛' },
-    grid: { id: 'grid', name: 'Retro Grid', cost: 0, icon: '▦' },
-    space: { id: 'space', name: 'Uzay', cost: 0, icon: '✨' },
-    radar: { id: 'radar', name: 'Sinyal', cost: 0, icon: '📡' },
-    forest: { id: 'forest', name: 'Orman', cost: 0, icon: '🌲' }
+    default: { id: 'default', name_tr: 'Standart', name_en: 'Default', cost: 0, icon: '⬛' },
+    grid: { id: 'grid', name_tr: 'Retro Grid', name_en: 'Retro Grid', cost: 0, icon: '▦' },
+    space: { id: 'space', name_tr: 'Uzay', name_en: 'Space', cost: 0, icon: '✨' },
+    radar: { id: 'radar', name_tr: 'Sinyal', name_en: 'Signal', cost: 0, icon: '📡' },
+    forest: { id: 'forest', name_tr: 'Orman', name_en: 'Forest', cost: 0, icon: '🌲' }
 };
 const POWERUPS = {
-    rainbow: { id: 'rainbow', name: 'Gökkuşağı', cost: 0, icon: '🌈' },
-    shield: { id: 'shield', name: 'Kalkan', cost: 0, icon: '🛡️' },
-    bomb: { id: 'bomb', name: 'Bomba', cost: 0, icon: '💣' }
+    rainbow: { id: 'rainbow', name_tr: 'Gökkuşağı', name_en: 'Rainbow', cost: 0, icon: '🌈' },
+    shield: { id: 'shield', name_tr: 'Kalkan', name_en: 'Shield', cost: 0, icon: '🛡️' },
+    bomb: { id: 'bomb', name_tr: 'Bomba', name_en: 'Bomb', cost: 0, icon: '💣' }
 };
 // ============================================================
 // LANGUAGE / i18n
@@ -125,6 +125,13 @@ const STRINGS = {
         achievementSuccess: 'Başarım kazanıldı! ★',
         claimBtn: (r) => `${r} ★ AL`,
         unlockBtn: (c) => `${c} ★ İLE AÇ`,
+        youLost: 'KAYBETTİN!',
+        comboX: (n) => `x${n} KOMBO!`,
+        rewardStarLabel: 'Başarı',
+        rewardComboLabel: (n) => `Kombo Bonusu (x${n})`,
+        rewardTotalLabel: 'Toplam',
+        achClaimed: '✓ ALINDI',
+        lvlPlay: 'OYNA',
         tips: [
             "Taktik: Hızlı ateş etmek yerine ritmi yakalamaya çalışın. Sabır en iyi silahtır.",
             "Taktik: 'Kalkan' güçlendiricisi, yanlış renge atış yaptığınızda bir can kurtarır.",
@@ -188,6 +195,13 @@ const STRINGS = {
         achievementSuccess: 'Achievement unlocked! ★',
         claimBtn: (r) => `CLAIM ${r} ★`,
         unlockBtn: (c) => `UNLOCK ${c} ★`,
+        youLost: 'YOU LOST!',
+        comboX: (n) => `x${n} COMBO!`,
+        rewardStarLabel: 'Stars',
+        rewardComboLabel: (n) => `Combo Bonus (x${n})`,
+        rewardTotalLabel: 'Total',
+        achClaimed: '✓ CLAIMED',
+        lvlPlay: 'PLAY',
         tips: [
             "Tip: Try to find the rhythm instead of shooting fast. Patience is your best weapon.",
             "Tip: The 'Shield' power-up saves you from a wrong-color hit.",
@@ -205,6 +219,8 @@ const STRINGS = {
 };
 
 function t(key) { return (STRINGS[currentLang] || STRINGS.tr)[key]; }
+function getName(obj) { return obj['name_' + currentLang] || obj.name_tr || obj.name || ''; }
+function getDesc(obj) { return obj['desc_' + currentLang] || obj.desc_tr || obj.desc || ''; }
 
 function applyLanguage() {
     const S = STRINGS[currentLang] || STRINGS.tr;
@@ -242,6 +258,14 @@ function applyLanguage() {
     if (settingsTitleEl) settingsTitleEl.textContent = S.settingsTitle;
     const dailyTitleEl = document.querySelector('#screen-wheel .screen-heading');
     if (dailyTitleEl) dailyTitleEl.textContent = S.dailyTitle;
+
+    // Level complete heading
+    const levelupHeading = document.querySelector('#screen-levelup .screen-heading');
+    if (levelupHeading) {
+        const lvlNum = document.getElementById('completed-level');
+        const num = lvlNum ? lvlNum.textContent : '';
+        levelupHeading.innerHTML = S.levelComplete.replace('{n}', `<span id="completed-level">${num}</span>`);
+    }
 
     // Setting labels
     const settingLabels = document.querySelectorAll('.setting-label');
@@ -584,7 +608,7 @@ function buildGrid() {
             for(let k=1; k<=3; k++) subHtml += `<span class="star-mini${k<=stars ? ' active' : ''}">★</span>`;
             subHtml += '</div>';
         } else {
-            subHtml = `<span class="lvl-sub">${unlocked ? 'OYNA' : '🔒'}</span>`;
+            subHtml = `<span class="lvl-sub">${unlocked ? t('lvlPlay') : '🔒'}</span>`;
         }
 
         btn.innerHTML = `
@@ -695,7 +719,7 @@ function renderStore() {
         
         card.innerHTML = `
             <div class="palette-header">
-                <span class="palette-name">${pal.name}</span>
+                <span class="palette-name">${getName(pal)}</span>
                 <div class="palette-colors">${colorDots}</div>
             </div>
             ${btnHtml}
@@ -719,12 +743,12 @@ function renderStore() {
         const tile = document.createElement('div');
         let stateClass = isEquipped ? 'shape-tile equipped' : isUnlocked ? 'shape-tile unlocked' : 'shape-tile locked';
         tile.className = stateClass;
-        tile.title = shape.name;
+        tile.title = getName(shape);
 
         const rotStyle = shape.rotation ? `transform: rotate(${shape.rotation}rad); display: inline-block;` : '';
         tile.innerHTML = `
             <span class="shape-tile-icon" style="${rotStyle}">${shape.icon}</span>
-            <span class="shape-tile-name">${shape.name}</span>
+            <span class="shape-tile-name">${getName(shape)}</span>
             ${isEquipped ? '<span class="shape-tile-badge equipped-badge">✓</span>' : ''}
             ${!isUnlocked ? `<span class="shape-tile-badge locked-badge">${shape.cost}★</span>` : ''}
         `;
@@ -767,7 +791,7 @@ function renderStore() {
                      
         card.innerHTML = `
             <div class="palette-header">
-                <span class="palette-name"><span style="color:var(--teal);margin-right:8px">${bg.icon}</span>${bg.name}</span>
+                <span class="palette-name"><span style="color:var(--teal);margin-right:8px">${bg.icon}</span>${getName(bg)}</span>
             </div>
             ${btnHtml}
         `;
@@ -800,7 +824,7 @@ function renderPowerups() {
                      
         card.innerHTML = `
             <div class="palette-header">
-                <span class="palette-name"><span style="color:var(--teal);margin-right:8px">${pu.icon}</span>${pu.name}</span>
+                <span class="palette-name"><span style="color:var(--teal);margin-right:8px">${pu.icon}</span>${getName(pu)}</span>
                 <span style="font-size:12px; color:var(--text-dim); margin-left:auto;">${t('inventory')}: ${p.inventory[pu.id]}</span>
             </div>
             ${btnHtml}
@@ -1480,7 +1504,10 @@ function checkHit(isTop, isOuter = false) {
             const starPoints = STAR_POINTS[stars] || 0;
             
             markDone(G.level, stars, comboBonus);
-            document.getElementById('completed-level').textContent = G.level;
+            const levelupHeading = document.querySelector('#screen-levelup .screen-heading');
+            if (levelupHeading) {
+                levelupHeading.innerHTML = t('levelComplete').replace('{n}', `<span id="completed-level">${G.level}</span>`);
+            }
             
             const starsContainer = document.getElementById('level-stars');
             starsContainer.innerHTML = '';
@@ -1507,14 +1534,14 @@ function checkHit(isTop, isOuter = false) {
             rewardEl.innerHTML = `
                 <div style="display:flex; align-items:center; gap:6px;">
                     <span style="color:var(--yellow);">★</span>
-                    <span>Başarı: <span style="color:var(--yellow);">${starPoints}</span></span>
+                    <span>${t('rewardStarLabel')}: <span style="color:var(--yellow);">${starPoints}</span></span>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px;">
                     <span style="color:var(--coral);">🔥</span>
-                    <span>Kombo Bonusu (x${comboBonus}): <span style="color:var(--yellow);">${comboBonus}</span></span>
+                    <span>${t('rewardComboLabel')(comboBonus)}: <span style="color:var(--yellow);">${comboBonus}</span></span>
                 </div>
                 <div style="margin-top:4px; font-size:17px; color:var(--text); font-weight:800;">
-                    Toplam: <span style="color:var(--yellow);">${starPoints + comboBonus} ★</span>
+                    ${t('rewardTotalLabel')}: <span style="color:var(--yellow);">${starPoints + comboBonus} ★</span>
                 </div>
             `;
 
@@ -1558,7 +1585,7 @@ function emitParticles(x,y,color,n) {
 }
 
 function showCombo(n) {
-    $comboTx.textContent = `x${n} KOMBO!`;
+    $comboTx.textContent = t('comboX')(n);
     $combo.classList.remove('hidden');
     $comboTx.style.animation = 'none';
     void $comboTx.offsetHeight;
@@ -1568,10 +1595,10 @@ function showCombo(n) {
 
 function refreshHUD() { 
     if (G.mode === 'endless') {
-        document.querySelector('#hud .hud-label').textContent = 'SKOR';
+        document.querySelector('#hud .hud-label').textContent = t('hudLabelScore');
         $level.textContent = G.endlessScore;
     } else {
-        document.querySelector('#hud .hud-label').textContent = 'BÖLÜM';
+        document.querySelector('#hud .hud-label').textContent = t('hudLabel');
         $level.textContent = G.level;
     }
     const p = loadProgress();
@@ -1871,7 +1898,7 @@ function draw() {
         ctx.textBaseline = 'middle';
         ctx.shadowColor = '#FF3B3B';
         ctx.shadowBlur = 30;
-        ctx.fillText('KAYBETTİN!', cfg.centerX, cfg.centerY);
+        ctx.fillText(t('youLost'), cfg.centerX, cfg.centerY);
         ctx.restore();
     }
 }
@@ -1903,6 +1930,8 @@ function drawRing() {
     ctx.restore();
 
     function drawSegments(segments, rotation, r, curBlinkAlpha) {
+        // Pass 1: Draw all segment fills in a single batch (no shadow)
+        ctx.globalAlpha = curBlinkAlpha;
         for (const seg of segments) {
             if (!seg.alive) continue;
             const sa=seg.start+rotation, ea=seg.end+rotation;
@@ -1911,79 +1940,77 @@ function drawRing() {
             ctx.arc(cx,cy,r-rw/2,ea,sa,true);
             ctx.closePath();
             if (seg.isFrosted) {
-                ctx.fillStyle = '#D4F1F9'; // Icy blue/white
-                ctx.globalAlpha = curBlinkAlpha;
+                ctx.fillStyle = '#D4F1F9';
                 ctx.fill();
-                ctx.save();
                 ctx.strokeStyle = '#FFFFFF';
                 ctx.lineWidth = 2.5;
                 ctx.stroke();
-                
-                // Add a little inner line to make it look like a block of ice
+                // Ice inner line
                 ctx.beginPath();
                 ctx.arc(cx, cy, r, sa, ea);
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
-                ctx.restore();
             } else {
-                ctx.fillStyle=seg.color; 
-                ctx.globalAlpha = curBlinkAlpha;
+                ctx.fillStyle=seg.color;
                 ctx.fill();
             }
-
-            if (seg.isTrap) {
-                ctx.save();
-                ctx.strokeStyle = '#FF3B3B';
-                ctx.lineWidth = 2;
-                ctx.globalAlpha = curBlinkAlpha * 0.8;
-                const midAngle = (sa + ea)/2;
-                const trapX = cx + Math.cos(midAngle) * r;
-                const trapY = cy + Math.sin(midAngle) * r;
-                ctx.beginPath();
-                ctx.moveTo(trapX - 5, trapY - 5); ctx.lineTo(trapX + 5, trapY + 5);
-                ctx.moveTo(trapX + 5, trapY - 5); ctx.lineTo(trapX - 5, trapY + 5);
-                ctx.stroke();
-                ctx.restore();
-            }
-
-            if (seg.isShielded) {
-                ctx.save();
-                ctx.strokeStyle = '#ADB5BD'; // Silver shield color
-                ctx.lineWidth = 4;
-                ctx.lineCap = 'round';
-                ctx.globalAlpha = curBlinkAlpha;
-                ctx.beginPath();
-                let pad = (ea - sa) * 0.1;
-                ctx.arc(cx, cy, r + rw/2 + 5, sa + pad, ea - pad);
-                ctx.stroke();
-                
-                // Inner glow/shadow for metallic feel
-                ctx.shadowColor = '#ADB5BD';
-                ctx.shadowBlur = 8;
-                ctx.stroke();
-                
-                // Add a highlight
-                ctx.strokeStyle = '#FFFFFF';
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.arc(cx, cy, r + rw/2 + 5, sa + pad + (ea - sa)*0.1, sa + pad + (ea - sa)*0.3);
-                ctx.stroke();
-                ctx.restore();
-            }
-
-            ctx.save(); 
-            ctx.globalAlpha = 0.15 * curBlinkAlpha; 
-            ctx.shadowColor = seg.isFrosted ? '#FFFFFF' : seg.color; 
-            ctx.shadowBlur = 12;
-            ctx.beginPath(); 
-            ctx.arc(cx,cy,r+rw/2,sa,ea); 
-            ctx.arc(cx,cy,r-rw/2,ea,sa,true);
-            ctx.closePath(); 
-            ctx.fillStyle = seg.isFrosted ? '#FFFFFF' : seg.color;
-            ctx.fill(); 
-            ctx.restore();
         }
+
+        // Pass 2: Trap markers
+        ctx.globalAlpha = curBlinkAlpha * 0.8;
+        ctx.strokeStyle = '#FF3B3B';
+        ctx.lineWidth = 2;
+        for (const seg of segments) {
+            if (!seg.alive || !seg.isTrap) continue;
+            const sa=seg.start+rotation, ea=seg.end+rotation;
+            const midAngle = (sa + ea)/2;
+            const trapX = cx + Math.cos(midAngle) * r;
+            const trapY = cy + Math.sin(midAngle) * r;
+            ctx.beginPath();
+            ctx.moveTo(trapX - 5, trapY - 5); ctx.lineTo(trapX + 5, trapY + 5);
+            ctx.moveTo(trapX + 5, trapY - 5); ctx.lineTo(trapX - 5, trapY + 5);
+            ctx.stroke();
+        }
+
+        // Pass 3: Shield arcs (batched, no shadowBlur per segment)
+        ctx.globalAlpha = curBlinkAlpha;
+        ctx.lineCap = 'round';
+        for (const seg of segments) {
+            if (!seg.alive || !seg.isShielded) continue;
+            const sa=seg.start+rotation, ea=seg.end+rotation;
+            let pad = (ea - sa) * 0.1;
+            // Main shield arc
+            ctx.strokeStyle = '#ADB5BD';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r + rw/2 + 5, sa + pad, ea - pad);
+            ctx.stroke();
+            // Highlight
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r + rw/2 + 5, sa + pad + (ea - sa)*0.1, sa + pad + (ea - sa)*0.3);
+            ctx.stroke();
+        }
+
+        // Pass 4: Glow layer — single batched path, ONE shadowBlur call
+        ctx.save();
+        ctx.globalAlpha = 0.15 * curBlinkAlpha;
+        ctx.shadowBlur = 12;
+        for (const seg of segments) {
+            if (!seg.alive) continue;
+            const sa=seg.start+rotation, ea=seg.end+rotation;
+            const glowColor = seg.isFrosted ? '#FFFFFF' : seg.color;
+            ctx.shadowColor = glowColor;
+            ctx.fillStyle = glowColor;
+            ctx.beginPath();
+            ctx.arc(cx,cy,r+rw/2,sa,ea);
+            ctx.arc(cx,cy,r-rw/2,ea,sa,true);
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.restore();
     }
 
     drawSegments(G.segments, G.rotation, r, blinkAlpha);
@@ -1994,7 +2021,9 @@ function drawRing() {
     ctx.fillStyle = isLight ? 'rgba(230,235,245,0.5)' : 'rgba(16,18,26,0.5)'; 
     ctx.globalAlpha = blinkAlpha; ctx.fill();
 
-    const rem = G.segments.filter(s=>s.alive && !s.isTrap).length + (G.hasOuterRing ? G.outerSegments.filter(s=>s.alive && !s.isTrap).length : 0);
+    let rem = 0;
+    for (const s of G.segments) { if (s.alive && !s.isTrap) rem++; }
+    if (G.hasOuterRing) { for (const s of G.outerSegments) { if (s.alive && !s.isTrap) rem++; } }
     const helperP = cachedHelpers;
     if (helperP.colorIndicator && G.ball) {
         const ballC = G.activeRainbow ? `hsl(${Date.now()%360}, 100%, 60%)` : G.ball.color;
@@ -2640,40 +2669,40 @@ function shuffle(a) { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.ran
 
 const ACH_KEY = 'coloraa_achievements';
 const ACHIEVEMENTS = [
-    { id:'first_clear',   icon:'🎯', name:'İlk Adım',           desc:'İlk bölümü tamamla',                  reward:10, check: () => { const p=loadProgress(); return p.done.length >= 1; } },
-    { id:'star3',         icon:'⭐', name:'Mükemmeliyetci',     desc:'Bir bölümde 3 yıldız al',              reward:10, check: () => { const p=loadProgress(); return Object.values(p.stars).some(s=>s>=3); } },
-    { id:'combo5',        icon:'🔥', name:'Kombo Ustası',       desc:'5x kombo yap',                        reward:10, check: () => { const a=loadAchData(); return (a.maxComboEver||0) >= 5; } },
-    { id:'combo10',       icon:'💥', name:'Durdurulamaz',       desc:'10x kombo yap',                       reward:10, check: () => { const a=loadAchData(); return (a.maxComboEver||0) >= 10; } },
-    { id:'clear10',       icon:'💎', name:'Koleksiyoncu',       desc:'10 bölüm tamamla',                    reward:10, check: () => { const p=loadProgress(); return p.done.length >= 10; } },
-    { id:'clear40',       icon:'🏆', name:'Yarı Yolda',         desc:'40 bölüm tamamla',                    reward:10, check: () => { const p=loadProgress(); return p.done.length >= 40; } },
-    { id:'clear80',       icon:'👑', name:'Efsane',             desc:'Tüm 80 bölümü tamamla',                reward:10, check: () => { const p=loadProgress(); return p.done.length >= 80; } },
-    { id:'endless50',     icon:'♾️',  name:'Sonsuz Başlangıç',   desc:'Sonsuz modda 50 puan yap',            reward:10, check: () => { const hi=localStorage.getItem(ENDLESS_HISCORE_KEY); return hi && parseInt(hi)>=50; } },
-    { id:'endless200',    icon:'🌌', name:'Uzay Yolcusu',       desc:'Sonsuz modda 200 puan yap',           reward:10, check: () => { const hi=localStorage.getItem(ENDLESS_HISCORE_KEY); return hi && parseInt(hi)>=200; } },
-    { id:'shield_save',   icon:'🛡️', name:'Hayatta Kalan',     desc:'Kalkanla ölümden kurtul',              reward:10, check: () => { const a=loadAchData(); return a.shieldUsed === true; } },
-    { id:'lvl10',         icon:'🎖️', name:'10. Bölüm',          desc:'10. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(10); } },
-    { id:'lvl20',         icon:'🎖️', name:'20. Bölüm',          desc:'20. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(20); } },
-    { id:'lvl30',         icon:'🎖️', name:'30. Bölüm',          desc:'30. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(30); } },
-    { id:'lvl40',         icon:'🎖️', name:'40. Bölüm',          desc:'40. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(40); } },
-    { id:'lvl50',         icon:'🎖️', name:'50. Bölüm',          desc:'50. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(50); } },
-    { id:'lvl60',         icon:'🎖️', name:'60. Bölüm',          desc:'60. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(60); } },
-    { id:'lvl70',         icon:'🎖️', name:'70. Bölüm',          desc:'70. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(70); } },
-    { id:'lvl80',         icon:'🥇', name:'80. Bölüm',          desc:'80. bölümü bitir',                    reward:5,  check: () => { const p=loadProgress(); return p.done.includes(80); } },
-    { id:'rainbow50',     icon:'🌈', name:'Renkli Başlangıç',   desc:'Gökkuşağı topunu 50 kez kullan',      reward:15, check: () => { const a=loadAchData(); return (a.rainbowUsedTotal||0) >= 50; } },
-    { id:'rainbow100',    icon:'🌈', name:'Renk Ustası',        desc:'Gökkuşağı topunu 100 kez kullan',     reward:25, check: () => { const a=loadAchData(); return (a.rainbowUsedTotal||0) >= 100; } },
-    { id:'rainbow200',    icon:'🌈', name:'Gökkuşağı Savaşçısı',desc:'Gökkuşağı topunu 200 kez kullan',     reward:50, check: () => { const a=loadAchData(); return (a.rainbowUsedTotal||0) >= 200; } },
-    { id:'shield50',      icon:'🛡️', name:'Savunma Temeli',     desc:'Kalkanı 50 kez kullan',               reward:15, check: () => { const a=loadAchData(); return (a.shieldUsedTotal||0) >= 50; } },
-    { id:'shield100',     icon:'🛡️', name:'Kalkan Uzmanı',      desc:'Kalkanı 100 kez kullan',              reward:25, check: () => { const a=loadAchData(); return (a.shieldUsedTotal||0) >= 100; } },
-    { id:'shield200',     icon:'🛡️', name:'Aşılmaz Duvar',      desc:'Kalkanı 200 kez kullan',              reward:50, check: () => { const a=loadAchData(); return (a.shieldUsedTotal||0) >= 200; } },
-    { id:'bomb50',        icon:'💣', name:'Patlayıcı Başlangıç',desc:'Bombayı 50 kez kullan',               reward:15, check: () => { const a=loadAchData(); return (a.bombUsedTotal||0) >= 50; } },
-    { id:'bomb100',       icon:'💣', name:'Yıkım Uzmanı',       desc:'Bombayı 100 kez kullan',              reward:25, check: () => { const a=loadAchData(); return (a.bombUsedTotal||0) >= 100; } },
-    { id:'bomb200',       icon:'💣', name:'Kıyamet Getiren',    desc:'Bombayı 200 kez kullan',              reward:50, check: () => { const a=loadAchData(); return (a.bombUsedTotal||0) >= 200; } },
-    { id:'backhit50',     icon:'🔄', name:'Ters Köşe',          desc:'Hedefi arkadan 50 kez patlat',        reward:15, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 50; } },
-    { id:'backhit100',    icon:'🔄', name:'Gizli Vuruş',        desc:'Hedefi arkadan 100 kez patlat',       reward:25, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 100; } },
-    { id:'backhit200',    icon:'🔄', name:'Kusursuz Suikastçi', desc:'Hedefi arkadan 200 kez patlat',       reward:50, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 200; } },
-    { id:'pop1000',       icon:'💥', name:'Patlatıcı',          desc:'Toplam 1000 renk patlat',             reward:20, check: () => { const a=loadAchData(); return (a.colorsDestroyedTotal||0) >= 1000; } },
-    { id:'pop3000',       icon:'💥', name:'Büyük Yıkım',        desc:'Toplam 3000 renk patlat',             reward:40, check: () => { const a=loadAchData(); return (a.colorsDestroyedTotal||0) >= 3000; } },
-    { id:'pop5000',       icon:'💥', name:'Renk Katili',        desc:'Toplam 5000 renk patlat',             reward:60, check: () => { const a=loadAchData(); return (a.colorsDestroyedTotal||0) >= 5000; } },
-    { id:'pop10000',      icon:'💥', name:'Yok Edici',          desc:'Toplam 10000 renk patlat',            reward:100, check: () => { const a=loadAchData(); return (a.colorsDestroyedTotal||0) >= 10000; } }
+    { id:'first_clear',   icon:'🎯', name_tr:'İlk Adım',           name_en:'First Step',          desc_tr:'İlk bölümü tamamla',                desc_en:'Complete the first level',              reward:10, check: () => { const p=loadProgress(); return p.done.length >= 1; } },
+    { id:'star3',         icon:'⭐', name_tr:'Mükemmeliyetci',     name_en:'Perfectionist',       desc_tr:'Bir bölümde 3 yıldız al',            desc_en:'Get 3 stars on a level',                reward:10, check: () => { const p=loadProgress(); return Object.values(p.stars).some(s=>s>=3); } },
+    { id:'combo5',        icon:'🔥', name_tr:'Kombo Ustası',       name_en:'Combo Master',        desc_tr:'5x kombo yap',                       desc_en:'Reach a 5x combo',                      reward:10, check: () => { const a=loadAchData(); return (a.maxComboEver||0) >= 5; } },
+    { id:'combo10',       icon:'💥', name_tr:'Durdurulamaz',       name_en:'Unstoppable',         desc_tr:'10x kombo yap',                      desc_en:'Reach a 10x combo',                     reward:10, check: () => { const a=loadAchData(); return (a.maxComboEver||0) >= 10; } },
+    { id:'clear10',       icon:'💎', name_tr:'Koleksiyoncu',       name_en:'Collector',           desc_tr:'10 bölüm tamamla',                   desc_en:'Complete 10 levels',                    reward:10, check: () => { const p=loadProgress(); return p.done.length >= 10; } },
+    { id:'clear40',       icon:'🏆', name_tr:'Yarı Yolda',         name_en:'Halfway There',       desc_tr:'40 bölüm tamamla',                   desc_en:'Complete 40 levels',                    reward:10, check: () => { const p=loadProgress(); return p.done.length >= 40; } },
+    { id:'clear80',       icon:'👑', name_tr:'Efsane',             name_en:'Legend',              desc_tr:'Tüm 80 bölümü tamamla',              desc_en:'Complete all 80 levels',                reward:10, check: () => { const p=loadProgress(); return p.done.length >= 80; } },
+    { id:'endless50',     icon:'♾️',  name_tr:'Sonsuz Başlangıç',   name_en:'Endless Start',       desc_tr:'Sonsuz modda 50 puan yap',           desc_en:'Score 50 in Endless Mode',              reward:10, check: () => { const hi=localStorage.getItem(ENDLESS_HISCORE_KEY); return hi && parseInt(hi)>=50; } },
+    { id:'endless200',    icon:'🌌', name_tr:'Uzay Yolcusu',       name_en:'Space Traveler',      desc_tr:'Sonsuz modda 200 puan yap',          desc_en:'Score 200 in Endless Mode',             reward:10, check: () => { const hi=localStorage.getItem(ENDLESS_HISCORE_KEY); return hi && parseInt(hi)>=200; } },
+    { id:'shield_save',   icon:'🛡️', name_tr:'Hayatta Kalan',     name_en:'Survivor',            desc_tr:'Kalkanla ölümden kurtul',             desc_en:'Survive death with a Shield',           reward:10, check: () => { const a=loadAchData(); return a.shieldUsed === true; } },
+    { id:'lvl10',         icon:'🎖️', name_tr:'10. Bölüm',          name_en:'Level 10',            desc_tr:'10. bölümü bitir',                   desc_en:'Complete level 10',                     reward:5,  check: () => { const p=loadProgress(); return p.done.includes(10); } },
+    { id:'lvl20',         icon:'🎖️', name_tr:'20. Bölüm',          name_en:'Level 20',            desc_tr:'20. bölümü bitir',                   desc_en:'Complete level 20',                     reward:5,  check: () => { const p=loadProgress(); return p.done.includes(20); } },
+    { id:'lvl30',         icon:'🎖️', name_tr:'30. Bölüm',          name_en:'Level 30',            desc_tr:'30. bölümü bitir',                   desc_en:'Complete level 30',                     reward:5,  check: () => { const p=loadProgress(); return p.done.includes(30); } },
+    { id:'lvl40',         icon:'🎖️', name_tr:'40. Bölüm',          name_en:'Level 40',            desc_tr:'40. bölümü bitir',                   desc_en:'Complete level 40',                     reward:5,  check: () => { const p=loadProgress(); return p.done.includes(40); } },
+    { id:'lvl50',         icon:'🎖️', name_tr:'50. Bölüm',          name_en:'Level 50',            desc_tr:'50. bölümü bitir',                   desc_en:'Complete level 50',                     reward:5,  check: () => { const p=loadProgress(); return p.done.includes(50); } },
+    { id:'lvl60',         icon:'🎖️', name_tr:'60. Bölüm',          name_en:'Level 60',            desc_tr:'60. bölümü bitir',                   desc_en:'Complete level 60',                     reward:5,  check: () => { const p=loadProgress(); return p.done.includes(60); } },
+    { id:'lvl70',         icon:'🎖️', name_tr:'70. Bölüm',          name_en:'Level 70',            desc_tr:'70. bölümü bitir',                   desc_en:'Complete level 70',                     reward:5,  check: () => { const p=loadProgress(); return p.done.includes(70); } },
+    { id:'lvl80',         icon:'🥇', name_tr:'80. Bölüm',          name_en:'Level 80',            desc_tr:'80. bölümü bitir',                   desc_en:'Complete level 80',                     reward:5,  check: () => { const p=loadProgress(); return p.done.includes(80); } },
+    { id:'rainbow50',     icon:'🌈', name_tr:'Renkli Başlangıç',   name_en:'Colorful Start',      desc_tr:'Gökkuşağı topunu 50 kez kullan',     desc_en:'Use Rainbow ball 50 times',             reward:15, check: () => { const a=loadAchData(); return (a.rainbowUsedTotal||0) >= 50; } },
+    { id:'rainbow100',    icon:'🌈', name_tr:'Renk Ustası',        name_en:'Color Master',        desc_tr:'Gökkuşağı topunu 100 kez kullan',    desc_en:'Use Rainbow ball 100 times',            reward:25, check: () => { const a=loadAchData(); return (a.rainbowUsedTotal||0) >= 100; } },
+    { id:'rainbow200',    icon:'🌈', name_tr:'Gökkuşağı Savaşçısı',name_en:'Rainbow Warrior',     desc_tr:'Gökkuşağı topunu 200 kez kullan',    desc_en:'Use Rainbow ball 200 times',            reward:50, check: () => { const a=loadAchData(); return (a.rainbowUsedTotal||0) >= 200; } },
+    { id:'shield50',      icon:'🛡️', name_tr:'Savunma Temeli',     name_en:'Defense Basics',      desc_tr:'Kalkanı 50 kez kullan',              desc_en:'Use Shield 50 times',                   reward:15, check: () => { const a=loadAchData(); return (a.shieldUsedTotal||0) >= 50; } },
+    { id:'shield100',     icon:'🛡️', name_tr:'Kalkan Uzmanı',      name_en:'Shield Expert',       desc_tr:'Kalkanı 100 kez kullan',             desc_en:'Use Shield 100 times',                  reward:25, check: () => { const a=loadAchData(); return (a.shieldUsedTotal||0) >= 100; } },
+    { id:'shield200',     icon:'🛡️', name_tr:'Aşılmaz Duvar',      name_en:'Unbreakable Wall',    desc_tr:'Kalkanı 200 kez kullan',             desc_en:'Use Shield 200 times',                  reward:50, check: () => { const a=loadAchData(); return (a.shieldUsedTotal||0) >= 200; } },
+    { id:'bomb50',        icon:'💣', name_tr:'Patlayıcı Başlangıç',name_en:'Explosive Start',     desc_tr:'Bombayı 50 kez kullan',              desc_en:'Use Bomb 50 times',                     reward:15, check: () => { const a=loadAchData(); return (a.bombUsedTotal||0) >= 50; } },
+    { id:'bomb100',       icon:'💣', name_tr:'Yıkım Uzmanı',       name_en:'Demolition Expert',   desc_tr:'Bombayı 100 kez kullan',             desc_en:'Use Bomb 100 times',                    reward:25, check: () => { const a=loadAchData(); return (a.bombUsedTotal||0) >= 100; } },
+    { id:'bomb200',       icon:'💣', name_tr:'Kıyamet Getiren',    name_en:'Doomsday Bringer',    desc_tr:'Bombayı 200 kez kullan',             desc_en:'Use Bomb 200 times',                    reward:50, check: () => { const a=loadAchData(); return (a.bombUsedTotal||0) >= 200; } },
+    { id:'backhit50',     icon:'🔄', name_tr:'Ters Köşe',          name_en:'Blindside',           desc_tr:'Hedefi arkadan 50 kez patlat',       desc_en:'Hit targets from behind 50 times',      reward:15, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 50; } },
+    { id:'backhit100',    icon:'🔄', name_tr:'Gizli Vuruş',        name_en:'Stealth Strike',      desc_tr:'Hedefi arkadan 100 kez patlat',      desc_en:'Hit targets from behind 100 times',     reward:25, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 100; } },
+    { id:'backhit200',    icon:'🔄', name_tr:'Kusursuz Suikastçi', name_en:'Perfect Assassin',    desc_tr:'Hedefi arkadan 200 kez patlat',      desc_en:'Hit targets from behind 200 times',     reward:50, check: () => { const a=loadAchData(); return (a.backHitsTotal||0) >= 200; } },
+    { id:'pop1000',       icon:'💥', name_tr:'Patlatıcı',          name_en:'Popper',              desc_tr:'Toplam 1000 renk patlat',            desc_en:'Pop 1000 colors total',                 reward:20, check: () => { const a=loadAchData(); return (a.colorsDestroyedTotal||0) >= 1000; } },
+    { id:'pop3000',       icon:'💥', name_tr:'Büyük Yıkım',        name_en:'Mass Destruction',    desc_tr:'Toplam 3000 renk patlat',            desc_en:'Pop 3000 colors total',                 reward:40, check: () => { const a=loadAchData(); return (a.colorsDestroyedTotal||0) >= 3000; } },
+    { id:'pop5000',       icon:'💥', name_tr:'Renk Katili',        name_en:'Color Slayer',        desc_tr:'Toplam 5000 renk patlat',            desc_en:'Pop 5000 colors total',                 reward:60, check: () => { const a=loadAchData(); return (a.colorsDestroyedTotal||0) >= 5000; } },
+    { id:'pop10000',      icon:'💥', name_tr:'Yok Edici',          name_en:'Annihilator',         desc_tr:'Toplam 10000 renk patlat',           desc_en:'Pop 10000 colors total',                reward:100, check: () => { const a=loadAchData(); return (a.colorsDestroyedTotal||0) >= 10000; } }
 ];
 
 function loadAchData() {
@@ -2718,9 +2747,9 @@ function renderAchievements() {
         
         let actionHtml = '';
         if (isClaimed) {
-            actionHtml = '<span class="ach-claimed-badge">✓ ALINDI</span>';
+            actionHtml = `<span class="ach-claimed-badge">${t('achClaimed')}</span>`;
         } else if (isUnlocked) {
-            actionHtml = `<button class="btn-claim" onclick="claimAchievement('${ach.id}')">${ach.reward} ★ AL</button>`;
+            actionHtml = `<button class="btn-claim" onclick="claimAchievement('${ach.id}')">${t('claimBtn')(ach.reward)}</button>`;
         } else {
             actionHtml = `<span class="ach-claimed-badge" style="opacity:0.3">🔒</span>`;
         }
@@ -2728,8 +2757,8 @@ function renderAchievements() {
         card.innerHTML = `
             <span class="ach-icon">${ach.icon}</span>
             <div class="ach-info">
-                <div class="ach-name">${ach.name}</div>
-                <div class="ach-desc">${ach.desc}</div>
+                <div class="ach-name">${getName(ach)}</div>
+                <div class="ach-desc">${getDesc(ach)}</div>
             </div>
             ${actionHtml}
         `;
@@ -2934,7 +2963,7 @@ function spinWheel() {
             if (prize.type === 'star') {
                 resultEl.textContent = t('rewardSuccess')(prize.amount);
             } else {
-                const puName = POWERUPS[prize.id].name;
+                const puName = getName(POWERUPS[prize.id]);
                 resultEl.textContent = t('rewardPowerup')(prize.amount, puName);
             }
             resultEl.classList.remove('hidden');
